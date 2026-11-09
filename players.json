@@ -1,0 +1,223 @@
+[
+ {
+  "name": "Shaina Pellington",
+  "espn_id": null,
+  "team": "Toulouse Métropole Basket (France, LFB)",
+  "note": "Pro in France",
+  "overseas": [
+   {
+    "source": "lfb",
+    "club": "toulouse",
+    "surname": "pellington"
+   }
+  ],
+  "photo_espn_id": 4601922,
+  "fiba_photo": {
+   "person": 217051,
+   "competition": 209090
+  },
+  "pos": "G"
+ },
+ {
+  "name": "Sami Hill",
+  "espn_id": null,
+  "team": "Hozono Global Jairis (Spain, Liga Femenina + EuroCup)",
+  "note": "Pro in Spain",
+  "overseas": [
+   {
+    "source": "feb",
+    "name": "S. HILL"
+   }
+  ],
+  "fiba_photo": {
+   "person": 188714,
+   "competition": 209090
+  },
+  "pos": "G"
+ },
+ {
+  "name": "Aari McDonald",
+  "espn_id": 4066553
+ },
+ {
+  "name": "Jasmine Bascoe",
+  "espn_id": 5240245
+ },
+ {
+  "name": "Mila Holloway",
+  "espn_id": 5240184
+ },
+ {
+  "name": "Syla Swords",
+  "espn_id": 5240185
+ },
+ {
+  "name": "Bridget Carleton",
+  "espn_id": 3906972
+ },
+ {
+  "name": "Agot Makeer",
+  "espn_id": 5311577
+ },
+ {
+  "name": "Avery Howell",
+  "espn_id": 5239666
+ },
+ {
+  "name": "Delaney Gibb",
+  "espn_id": 5239446
+ },
+ {
+  "name": "Cassandre Prosper",
+  "espn_id": 5122345,
+  "overseas": [
+   {
+    "source": "zbl",
+    "player_id": 144615,
+    "surname": "prosper",
+    "team": "zvvz-usk-praha"
+   }
+  ]
+ },
+ {
+  "name": "Merissah Russell",
+  "espn_id": null,
+  "team": "Luleå Basket (Sweden, Damligan)",
+  "note": "Last seen 2025-26 season",
+  "overseas": [
+   {
+    "source": "feb",
+    "name": "M. RUSSELL"
+   }
+  ],
+  "eurobasket_id": 441054,
+  "photo_espn_id": 4703213,
+  "fiba_photo": {
+   "person": 235589,
+   "competition": 208967
+  },
+  "pos": "G"
+ },
+ {
+  "name": "Shay Colley",
+  "espn_id": null,
+  "team": "Žabiny Brno (Czechia, ZBL + EuroCup)",
+  "note": "Pro in Czechia",
+  "overseas": [
+   {
+    "source": "zbl",
+    "player_id": 141621,
+    "surname": "colley",
+    "team": "zabiny-brno"
+   }
+  ],
+  "photo_espn_id": 3923577,
+  "fiba_photo": {
+   "person": 196900,
+   "competition": 208967
+  },
+  "pos": "G"
+ },
+ {
+  "name": "Yvonne Ejim",
+  "espn_id": null,
+  "team": "Spain (club unconfirmed)",
+  "note": "Sat out the 2026 WNBA season",
+  "overseas": [
+   {
+    "source": "feb",
+    "name": "Y. EJIM"
+   }
+  ],
+  "photo_espn_id": 4703874,
+  "fiba_photo": {
+   "person": 172742,
+   "competition": 209090
+  },
+  "pos": "F"
+ },
+ {
+  "name": "Kayla Alexander",
+  "espn_id": 2491232,
+  "fiba_photo": {
+   "person": 161433,
+   "competition": 208967
+  }
+ },
+ {
+  "name": "Aaliyah Edwards",
+  "espn_id": 4433408
+ },
+ {
+  "name": "Serah Williams",
+  "espn_id": 5108550
+ },
+ {
+  "name": "Toby Fournier",
+  "espn_id": 5238277
+ },
+ {
+  "name": "Faith Dut",
+  "espn_id": null,
+  "team": "ASC Sepsi SIC Sfântu Gheorghe (Romania, Liga Națională)",
+  "note": "Pro in Romania",
+  "overseas": [
+   {
+    "source": "genius_hosted",
+    "org": "FRB",
+    "comp_id": 50109,
+    "comp": "Romania LNBF",
+    "club": "sepsi",
+    "surname": "dut"
+   }
+  ],
+  "photo_espn_id": 4433702,
+  "fiba_photo": {
+   "person": 250669,
+   "competition": 209090
+  },
+  "pos": "C"
+ },
+ {
+  "name": "Niyah Becker",
+  "espn_id": null,
+  "team": "Kibirkštis Vilnius (Lithuania + EuroLeague)",
+  "note": "Signed for 2026-27",
+  "eurobasket_id": 400080,
+  "photo_espn_id": 4398862,
+  "fiba_photo": {
+   "person": 217042,
+   "competition": 208967
+  },
+  "pos": "F"
+ },
+ {
+  "name": "Tara Wallack",
+  "espn_id": null,
+  "team": "ALBA Berlin (Germany DBBL + EuroCup)",
+  "note": "Signed for 2026-27, from Sopron",
+  "eurobasket_id": 520144,
+  "photo_espn_id": 4899070,
+  "fiba_photo": {
+   "person": 266912,
+   "competition": 209090
+  },
+  "pos": "F"
+ },
+ {
+  "name": "Cearah Parchment",
+  "espn_id": 5311539
+ },
+ {
+  "name": "Savvy Swords",
+  "espn_id": 5454844
+ },
+ {
+  "name": "Skylar Forbes",
+  "espn_id": 5175019
+ },
+ {
+  "name": "Laeticia Amihere",
+  "espn_id": 4432834
+ }
+]

@@ -1,0 +1,448 @@
+<title>Canada WNT Player Watch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a scouting wall. Filter bar on top, a grid of player cards, a full player file in a dialog. */
+:root {
+  --bg: #f4f1f1; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #e4dcdd;
+  --red: #c8102e; --red-ink: #b00e28; --panel: #b30f2a; --panel-deep: #6e0a1b; --on-panel: #ffffff;
+  --good: #1f7a4d; --good-bg: #e3f3ea; --warn: #8a5a00; --warn-bg: #fbefd6; --none: #5f5659; --none-bg: #ece7e8;
+  --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
+  --court: #d8cfd1; --bar: #c8102e; --bar-dim: #e8b4bc;
+  --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 20px; }
+.eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--red-ink); }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 52px); line-height: .95; margin: 6px 0 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+.meta { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+.meta a { color: inherit; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px 0 18px; border-top: 1px solid var(--line); }
+.controls input[type=search] { flex: 1 1 200px; max-width: 280px; font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12.5px var(--body); padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .ct { color: var(--muted); margin-left: 4px; }
+.chip[aria-pressed=true] .ct { color: inherit; opacity: .7; }
+.controls label { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.controls select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 22px; }
+.card { background: var(--surface); border-radius: 14px; overflow: hidden; cursor: pointer; text-align: left; border: 0; padding: 0; color: inherit; font: inherit;
+  box-shadow: 0 1px 2px rgba(20,10,12,.06), 0 6px 18px rgba(20,10,12,.06); transition: transform .15s ease, box-shadow .15s ease; display: flex; flex-direction: column; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(20,10,12,.08), 0 14px 30px rgba(20,10,12,.12); }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+
+.photo { position: relative; aspect-ratio: 5 / 4; max-width: 100%; overflow: hidden; color: var(--on-panel);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-deep) 100%); }
+.photo::before { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.06) 22px 24px); mask: linear-gradient(90deg, #000 0 40%, transparent 70%); }
+.photo .jn { position: absolute; right: 10px; top: -6px; font: 800 120px/1 var(--display); color: rgba(255,255,255,.13); letter-spacing: -.02em; }
+.photo img.head { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); height: 94%; width: auto; max-width: none; object-fit: contain; }
+.photo .init { position: absolute; inset: 0; display: grid; place-items: center; font: 800 64px var(--display); color: rgba(255,255,255,.55); }
+.photo .logo { position: absolute; left: 14px; top: 14px; width: 38px; height: 38px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.photo .logo img { width: 28px; height: 28px; object-fit: contain; }
+.photo .tagl { position: absolute; left: 14px; bottom: 10px; font: 500 13px var(--mono); letter-spacing: .06em; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+.photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 30%; background: linear-gradient(transparent, rgba(0,0,0,.35)); pointer-events: none; }
+.photo .tagl, .photo .logo { z-index: 1; }
+
+.cbody { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.kick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--red-ink); }
+.pill { font: 600 10.5px var(--body); letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; display: inline-flex; gap: 4px; align-items: center; }
+.pill.good { color: var(--good); background: var(--good-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.pill.none { color: var(--none); background: var(--none-bg); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.warn::before { border-radius: 1px; transform: rotate(45deg); }
+.pill.none::before { background: transparent; border: 1.5px solid currentColor; width: 5px; height: 5px; }
+.name { font: 800 27px/1 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; padding-bottom: 10px; border-bottom: 2px solid var(--ink); text-wrap: balance; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.stats b { display: block; font: 700 25px/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.stats span { font: 500 10.5px var(--mono); color: var(--muted); letter-spacing: .06em; }
+.last { font-size: 12.5px; color: var(--muted); }
+.last strong { color: var(--ink); font-weight: 600; }
+.mini { margin: 2px -4px 0; }
+.mini svg { display: block; width: 100%; height: auto; }
+.foot { font: 400 11.5px var(--mono); color: var(--muted); margin-top: auto; }
+.nodata { font-size: 13px; color: var(--muted); padding: 10px 0 4px; }
+.empty { padding: 40px 0; color: var(--muted); text-align: center; grid-column: 1 / -1; }
+
+/* court */
+.court line, .court path, .court rect, .court circle.ln { fill: none; stroke: var(--court); stroke-width: .22; }
+.hex { stroke: var(--surface); stroke-width: .18; }
+.hex:hover { stroke: var(--ink); stroke-width: .3; }
+
+/* dialog */
+dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
+dialog::backdrop { background: rgba(15,8,10,.6); }
+.dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); background: linear-gradient(120deg, var(--panel), var(--panel-deep)); position: relative; }
+.dhead .photo { aspect-ratio: auto; height: 100%; min-height: 160px; background: transparent; }
+.dhead .photo::before, .dhead .photo::after { display: none; }
+.dhead .info { padding: 22px 56px 20px 8px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; min-width: 0; }
+.dhead .info .kick { color: rgba(255,255,255,.85); }
+.dhead h2 { font: 800 clamp(30px, 5vw, 46px)/0.95 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
+.dhead .sub { font-size: 13.5px; opacity: .9; }
+.close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 20px; cursor: pointer; z-index: 2; }
+.close:hover { background: rgba(255,255,255,.3); }
+.dbody { padding: 18px 24px 28px; display: flex; flex-direction: column; gap: 26px; }
+.dbody > *, .two > * { min-width: 0; }
+.dbody svg { width: 100%; height: auto; display: block; }
+.dbody h3 { font: 700 13px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.two { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 28px; align-items: start; }
+.tblwrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
+th { font: 500 11px var(--mono); letter-spacing: .06em; color: var(--muted); text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+tr.sub td { color: var(--muted); font-style: italic; }
+td .wl { font-weight: 600; }
+td .wl.W { color: var(--good); } td .wl.L { color: var(--muted); }
+td.hi { font-weight: 700; }
+.badge { font: 600 9.5px var(--body); padding: 1px 4px; border-radius: 3px; background: var(--none-bg); color: var(--none); margin-left: 4px; letter-spacing: .04em; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
+.legend .sw { display: inline-flex; gap: 2px; align-items: center; }
+.legend .sw i { width: 14px; height: 10px; display: inline-block; border-radius: 2px; }
+.more { font: 500 13px var(--body); background: none; border: 1px solid var(--line); color: var(--ink); padding: 7px 12px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+.bars svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bars text { fill: var(--muted); font: 400 9px var(--mono); }
+.bars .bar { fill: var(--bar); }
+.bars .bar:hover, .bars .bar.on { fill: var(--ink); }
+.bars .avg { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
+.bars .grid line { stroke: var(--line); stroke-width: 1; }
+.note { font-size: 13px; color: var(--muted); max-width: 62ch; }
+#tip { position: fixed; pointer-events: none; z-index: 1000; background: var(--ink); color: var(--bg); font: 500 12px var(--body); padding: 6px 9px; border-radius: 6px; max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+footer { margin-top: 40px; font-size: 12px; color: var(--muted); max-width: 80ch; }
+
+@media (max-width: 720px) {
+  .two { grid-template-columns: minmax(0, 1fr); }
+  .dhead { grid-template-columns: 110px 1fr; }
+  .dbody { padding: 16px 16px 24px; }
+  .controls label { margin-left: 0; }
+  .meta { text-align: left; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Canada Basketball · Senior Women</div>
+      <h1>Player Watch</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
+    <div class="chips" id="chips" role="group" aria-label="Filter players"></div>
+    <label for="sort">Sort
+      <select id="sort">
+        <option value="status">Playing now first</option>
+        <option value="mpg">Minutes per game</option>
+        <option value="ppg">Points per game</option>
+        <option value="name">Name</option>
+      </select>
+    </label>
+  </div>
+  <div class="grid" id="grid"></div>
+  <footer>
+    NCAA and WNBA: ESPN box scores and shot locations via <a href="https://www.sportsdataverse.org/" target="_blank" rel="noopener">SportsDataverse</a> (wehoop).
+    Overseas: FIBA (EuroLeague and EuroCup Women), FIBA LiveStats (France LFB, Romania LNBF, with shot locations), the Spanish federation (Liga Femenina), ŽBL (Czechia) and the Turkish federation (KBSL).
+    Eurobasket (Canada Basketball subscription, internal use) fills Sweden, Germany and the Baltic league and confirms current clubs. Each card shows the player's most recent season; for club players that is all 2026-27 club games combined.
+    TS% = PTS ÷ (2 × (FGA + 0.44 × FTA)). Shot charts leave out free throws.
+  </footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dname"></dialog>
+<div id="tip" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, d = 1) => v == null ? "–" : Number(v).toFixed(d);
+const slug = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const dfmt = iso => { const [y, m, d] = iso.split("-").map(Number); return `${MON[m - 1]} ${d}`; };
+const dfmtY = iso => { const [y, m, d] = iso.split("-").map(Number); return `${MON[m - 1]} ${d}, ${y}`; };
+const initials = n => n.split(/\s+/).filter(w => /^[A-Z]/.test(w) && !w.startsWith("(")).map(w => w[0]).slice(0, 2).join("");
+
+/* ---- status: what a coach needs to know at a glance ---- */
+function status(p) {
+  if (!p.covered) return { cls: "none", text: "No games found", rank: 3 };
+  const cur = p.seasons[0];
+  if (!["NCAA", "WNBA"].includes(cur.league)) {  // overseas club season, 2026-27
+    if (p.days_since <= 14) return { cls: "good", text: p.days_since === 0 ? "Played today" : `Played ${p.days_since}d ago`, rank: 0 };
+    return { cls: "warn", text: `No games in ${p.days_since}d`, rank: 1 };
+  }
+  if (cur.key === DATA.current[cur.league] && DATA.in_season[cur.league] && p.days_since <= 10)
+    return { cls: "good", text: p.days_since === 0 ? "Played today" : `Played ${p.days_since}d ago`, rank: 0 };
+  if (cur.league === "NCAA" && cur.key !== DATA.current.NCAA)
+    return { cls: "warn", text: `No ${seasonLabel(DATA.current.NCAA)} games`, rank: 1 };
+  return { cls: "none", text: `${cur.league} offseason`, rank: 2 };
+}
+function seasonLabel(key) { const [lg, y] = key.split("-"); return lg === "NCAA" ? `${+y - 1}-${String(y).slice(2)}` : y; }
+const P = DATA.players.map(p => ({ ...p, slug: slug(p.name), st: status(p) }));
+
+/* ---- shot chart (hexbin on half court; feet, rim at 0,0) ---- */
+const FG_STEPS = [[0, 30, "--h1"], [30, 40, "--h2"], [40, 50, "--h3"], [50, 60, "--h4"], [60, 101, "--h5"]];
+const fgVar = pct => FG_STEPS.find(([a, b]) => pct >= a && pct < b)[2];
+function courtSVG(shots, { r = 1.5, maxY = 30, interactive = false } = {}) {
+  const top = -5.25, W = 50, H = maxY - top;
+  const bins = new Map(), w = Math.sqrt(3) * r, h = 1.5 * r;
+  for (const [x, y, m] of shots) {
+    if (y > maxY) continue;
+    let row = Math.round((y - top) / h), off = (row & 1) ? w / 2 : 0;
+    let col = Math.round((x - off) / w);
+    // check neighbours for the true nearest hex centre
+    let best = null, bd = 1e9;
+    for (const dr of [-1, 0, 1]) { const rr = row + dr, o = (rr & 1) ? w / 2 : 0;
+      for (const dc of [-1, 0, 1]) { const cc = Math.round((x - o) / w) + dc, cx = cc * w + o, cy = rr * h + top;
+        const dd = (x - cx) ** 2 + (y - cy) ** 2; if (dd < bd) { bd = dd; best = [rr, cc, cx, cy]; } } }
+    const k = best[0] + ":" + best[1];
+    const b = bins.get(k) || { cx: best[2], cy: best[3], n: 0, m: 0 };
+    b.n++; b.m += m; bins.set(k, b);
+  }
+  const max = Math.max(1, ...[...bins.values()].map(b => b.n));
+  const hexPath = (cx, cy, s) => { let d = ""; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30);
+      d += (i ? "L" : "M") + (cx + s * Math.cos(a)).toFixed(2) + "," + (cy + s * Math.sin(a)).toFixed(2); } return d + "Z"; };
+  let hexes = "";
+  for (const b of [...bins.values()].sort((a, c) => a.n - c.n)) {
+    const s = r * (0.35 + 0.65 * Math.sqrt(b.n / max)), pct = 100 * b.m / b.n;
+    hexes += `<path class="hex" d="${hexPath(b.cx, b.cy, s)}" style="fill:var(${fgVar(pct)})"${interactive ? ` data-tip="${b.n} FGA · ${b.m} made · ${pct.toFixed(0)}%"` : ""}/>`;
+  }
+  const yb = top, ftY = 19 + top, cornerY = Math.sqrt(22.15 ** 2 - 22 ** 2);
+  const court = `<g class="court">
+    <line x1="0" y1="${yb}" x2="50" y2="${yb}"/>
+    <rect x="17" y="${yb}" width="16" height="19"/>
+    <path d="M19,${ftY} A6,6 0 0 0 31,${ftY}"/>
+    <path d="M21,0 A4,4 0 0 0 29,0"/>
+    <circle class="ln" cx="25" cy="0" r=".75"/>
+    <line x1="22" y1="-1.25" x2="28" y2="-1.25"/>
+    <path d="M3,${yb} L3,${cornerY.toFixed(2)} A22.15,22.15 0 0 0 47,${cornerY.toFixed(2)} L47,${yb}"/>
+  </g>`;
+  return `<svg viewBox="-1 ${top - 0.6} ${W + 2} ${H + 1.2}" role="img" aria-label="Shot chart, ${shots.length} field-goal attempts">${court}${hexes}</svg>`;
+}
+
+/* ---- cards ---- */
+let filter = "all";
+const FILTERS = [
+  ["all", "All", p => true],
+  ["live", "Playing now", p => p.st.rank === 0],
+  ["NCAA", "NCAA", p => p.covered && p.seasons[0].league === "NCAA"],
+  ["WNBA", "WNBA", p => p.covered && p.seasons[0].league === "WNBA"],
+  ["intl", "Overseas", p => p.covered && !["NCAA", "WNBA"].includes(p.seasons[0].league)],
+  ["none", "No games", p => !p.covered],
+];
+function photoBlock(p, withTag = true) {
+  const s = p.covered ? p.seasons[0] : null;
+  return `<div class="photo">
+    ${p.jersey ? `<div class="jn num">${esc(p.jersey)}</div>` : ""}
+    ${p.photo ? `<img class="head" src="${p.photo}" alt="">` : `<div class="init">${esc(initials(p.name))}</div>`}
+    ${s && s.logo ? `<div class="logo"><img src="${s.logo}" alt="${esc(s.team)}"></div>` : ""}
+    ${withTag && p.covered ? `<div class="tagl">${p.jersey ? "#" + esc(p.jersey) + " · " : ""}${esc(p.pos)}</div>` : ""}
+  </div>`;
+}
+function lastLine(p) {
+  const g = p.games[0];
+  return `<div class="last">Last game ${dfmt(g.d)} ${g.ha} ${esc(g.oppab || g.opp)}: <strong class="num">${g.pts} PTS · ${g.reb} REB · ${g.ast} AST</strong> in ${g.min} min</div>`;
+}
+const gamesFor = (p, s) => p.games.filter(g => g.s === s.key || (s.parts || []).includes(g.s));
+function prevLine(p) {
+  const s = p.seasons[0];
+  const prev = p.seasons.find((x, i) => i > 0 && !(s.parts || []).includes(x.key) && x.label !== s.label);
+  if (!prev || s.gp >= 5) return "";
+  return `<br>${prev.label} ${prev.league}: ${fmt(prev.ppg)} PPG · ${fmt(prev.rpg)} RPG · ${fmt(prev.apg)} APG · ${fmt(prev.ts)} TS% (${prev.gp} GP)`;
+}
+function card(p) {
+  const s = p.covered ? p.seasons[0] : null;
+  const team = p.covered ? s.team : (p.manual_team || "Team not listed");
+  const shots = p.covered ? (p.shots[s.key] || []) : [];
+  return `<button class="card" data-slug="${p.slug}" aria-label="Open ${esc(p.name)}">
+    ${photoBlock(p)}
+    <div class="cbody">
+      <div class="kick"><span>${p.covered ? s.league + " · " : ""}${esc(team)}</span><span class="pill ${p.st.cls}">${p.st.text}</span></div>
+      <h2 class="name">${esc(p.name)}</h2>
+      ${p.covered ? `
+        <div class="stats num">
+          <div><b>${fmt(s.ppg)}</b><span>PPG</span></div>
+          <div><b>${fmt(s.rpg)}</b><span>RPG</span></div>
+          <div><b>${fmt(s.apg)}</b><span>APG</span></div>
+          <div><b>${fmt(s.ts)}</b><span>TS%</span></div>
+        </div>
+        ${lastLine(p)}
+        <div class="mini">${shots.length ? courtSVG(shots, { r: 1.7, maxY: 27 }) : `<div class="nodata">No shot locations for this season.</div>`}</div>
+        <div class="foot num">${s.label} · ${s.gp} game${s.gp === 1 ? "" : "s"} · ${fmt(s.mpg)} min · ${shots.length} shots charted${prevLine(p)}</div>`
+      : `<div class="nodata">${esc(p.note || "Not covered by NCAA or WNBA data.")}</div>`}
+    </div>
+  </button>`;
+}
+function render() {
+  const q = $("#q").value.trim().toLowerCase();
+  const fn = FILTERS.find(f => f[0] === filter)[2];
+  const sortBy = $("#sort").value;
+  const cs = p => p.covered ? p.seasons[0] : {};
+  let list = P.filter(fn).filter(p => !q || p.name.toLowerCase().includes(q) || (p.covered && p.seasons.some(s => s.team_full.toLowerCase().includes(q))));
+  const by = {
+    status: (a, b) => a.st.rank - b.st.rank || (cs(b).mpg ?? -1) - (cs(a).mpg ?? -1) || a.name.localeCompare(b.name),
+    mpg: (a, b) => (cs(b).mpg ?? -1) - (cs(a).mpg ?? -1),
+    ppg: (a, b) => (cs(b).ppg ?? -1) - (cs(a).ppg ?? -1),
+    name: (a, b) => a.name.split(" ").pop().localeCompare(b.name.split(" ").pop()),
+  }[sortBy];
+  list.sort(by);
+  $("#grid").innerHTML = list.length ? list.map(card).join("") : `<div class="empty">No players match. Clear the search or pick another filter.</div>`;
+  $("#chips").innerHTML = FILTERS.map(([k, label, f]) => `<button class="chip" data-f="${k}" aria-pressed="${k === filter}">${label}<span class="ct num">${P.filter(f).length}</span></button>`).join("");
+  try { localStorage.setItem("wnt-ui", JSON.stringify({ filter, sort: sortBy })); } catch (e) {}
+}
+
+/* ---- player file ---- */
+const COLS = [["MIN","min"],["PTS","pts"],["REB","reb"],["AST","ast"],["STL","stl"],["BLK","blk"],["TOV","tov"]];
+function seasonRow(label, s, cls = "") {
+  return `<tr class="${cls}"><td class="l">${label}</td><td>${s.gp}</td><td>${fmt(s.mpg)}</td><td class="hi">${fmt(s.ppg)}</td><td>${fmt(s.rpg)}</td><td>${fmt(s.apg)}</td><td>${fmt(s.spg)}</td><td>${fmt(s.bpg)}</td><td>${fmt(s.tpg)}</td><td>${fmt(s.fg)}</td><td>${fmt(s.tp)}</td><td>${fmt(s.tpa)}</td><td>${fmt(s.ft)}</td><td>${fmt(s.ts)}</td></tr>`;
+}
+function summarize(games) {
+  const n = games.length, sum = k => games.reduce((a, g) => a + g[k], 0);
+  const pct = (m, a) => sum(a) ? 100 * sum(m) / sum(a) : null;
+  const tsa = sum("fga") + 0.44 * sum("fta");
+  return { gp: n, mpg: sum("min") / n, ppg: sum("pts") / n, rpg: sum("reb") / n, apg: sum("ast") / n, spg: sum("stl") / n, bpg: sum("blk") / n, tpg: sum("tov") / n,
+    fg: pct("fgm", "fga"), tp: pct("tpm", "tpa"), tpa: sum("tpa") / n, ft: pct("ftm", "fta"), ts: tsa ? 100 * sum("pts") / (2 * tsa) : null };
+}
+function barsSVG(games, avg) {
+  const gs = games.slice().reverse(), W = 560, H = 150, pl = 24, pb = 18, pt = 6;
+  const max = Math.max(10, ...gs.map(g => g.pts)), step = Math.ceil(max / 3 / 5) * 5, top = step * Math.ceil(max / step);
+  const y = v => pt + (H - pt - pb) * (1 - v / top), bw = (W - pl) / Math.max(gs.length, 15);
+  let grid = "";
+  for (let v = 0; v <= top; v += step) grid += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 5}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  const bars = gs.map((g, i) => {
+    const x = pl + i * bw + Math.max(1, bw * 0.12), w = Math.max(2, bw * 0.76), yy = y(g.pts), hh = Math.max(0, y(0) - yy);
+    const rr = Math.min(3, w / 2, hh);
+    const d = hh <= 0 ? "" : `M${x},${y(0)}V${yy + rr}Q${x},${yy} ${x + rr},${yy}H${x + w - rr}Q${x + w},${yy} ${x + w},${yy + rr}V${y(0)}Z`;
+    return `<path class="bar" d="${d}" data-tip="${dfmt(g.d)} ${g.ha} ${esc(g.opp)}: ${g.pts} PTS, ${g.fgm}-${g.fga} FG, ${g.min} min"/>
+      <rect x="${pl + i * bw}" y="${pt}" width="${bw}" height="${H - pt - pb}" fill="transparent" data-tip="${dfmt(g.d)} ${g.ha} ${esc(g.opp)}: ${g.pts} PTS, ${g.fgm}-${g.fga} FG, ${g.min} min" data-bar="${i}"/>`;
+  }).join("");
+  const labels = gs.length ? `<text x="${pl}" y="${H - 4}">${dfmt(gs[0].d)}</text><text x="${pl + gs.length * bw}" y="${H - 4}" text-anchor="${gs.length > 3 ? "end" : "start"}">${gs.length > 1 ? dfmt(gs.at(-1).d) : ""}</text>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points by game"><g class="grid">${grid}</g>${bars}
+    <line class="avg" x1="${pl}" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/><text x="${W}" y="${y(avg) - 4}" text-anchor="end" style="fill:var(--ink)">avg ${avg.toFixed(1)}</text>${labels}</svg>`;
+}
+const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "Liga Fem.", "Spain LF-2": "LF-2", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
+function gameRows(games, showComp = false) {
+  return games.map(g => `<tr><td class="l">${dfmt(g.d)}</td><td class="l">${g.ha} ${esc(g.opp)}${g.po ? '<span class="badge">POST</span>' : ""}${showComp ? `<span class="badge">${esc(SHORT[g.s.split("|")[0]] || g.s.split("|")[0])}</span>` : ""}</td>
+    <td class="l"><span class="wl ${g.wl}">${g.wl}</span> ${g.sc}</td>
+    ${COLS.map(([, k]) => `<td${k === "pts" ? ' class="hi"' : ""}>${g[k]}</td>`).join("")}
+    <td>${g.fgm}-${g.fga}</td><td>${g.tpm}-${g.tpa}</td><td>${g.ftm}-${g.fta}</td></tr>`).join("");
+}
+let cur = null;
+function openPlayer(p, skey) {
+  const dlg = $("#dlg");
+  cur = p;
+  const head = (sub, kick) => `<div class="dhead">${photoBlock(p, false)}
+      <div class="info"><div class="kick"><span>${kick}</span><span class="pill ${p.st.cls}">${p.st.text}</span></div>
+      <h2 id="dname">${esc(p.name)}</h2><div class="sub">${sub}</div></div>
+      <button class="close" aria-label="Close" data-close>×</button></div>`;
+  if (!p.covered) {
+    dlg.innerHTML = head(esc(p.manual_team || "Team not listed"), "Canada · Senior Women") + `<div class="dbody"><p class="note">No 2026-27 games found for this player in any connected source (NCAA, WNBA, EuroLeague/EuroCup, and the Spanish, French, Czech, Romanian and Turkish leagues). ${esc(p.note)}</p></div>`;
+  } else {
+    const s = p.seasons.find(x => x.key === skey) || p.seasons[0];
+    const sg = gamesFor(p, s);
+    const shots = p.shots[s.key] || [];
+    const last5 = sg.slice(0, 5);
+    const posName = { G: "Guard", F: "Forward", C: "Center" }[p.pos] || p.pos;
+    const kick = `${p.jersey ? "#" + esc(p.jersey) + " · " : ""}${esc(posName)}`;
+    dlg.innerHTML = head(`${esc(p.seasons[0].team_full)} · ${p.seasons[0].league} · last game ${dfmtY(p.last_game)}<br><span style="opacity:.75">Source: ${esc((p.sources || []).join(", "))}${p.eb_club ? ` · Current club per Eurobasket: ${esc(p.eb_club)}, checked ${dfmt(p.eb_checked)}` : ""}</span>`, kick) + `
+    <div class="dbody">
+      <section>
+        <h3>Season averages</h3>
+        <div class="tblwrap"><table>
+          <thead><tr><th>Season</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG%</th><th>3P%</th><th>3PA</th><th>FT%</th><th>TS%</th></tr></thead>
+          <tbody>${p.seasons.map((x, i) => seasonRow(`${x.label} ${x.league} · ${esc(x.team)}`, x) +
+            (i === 0 && x.gp > 5 ? seasonRow(`Last 5 games`, summarize(gamesFor(p, x).slice(0, 5)), "sub") : "")).join("")}</tbody>
+        </table></div>
+      </section>
+      ${p.seasons.length > 1 ? `<div class="tabs" role="group" aria-label="Season">${p.seasons.map(x => `<button class="chip" data-season="${x.key}" aria-pressed="${x.key === s.key}">${x.label} ${x.league} · ${esc(x.team)}</button>`).join("")}</div>` : ""}
+      <div class="two">
+        <section>
+          <h3>Shot chart · ${s.label} ${s.league}</h3>
+          ${shots.length ? courtSVG(shots, { r: 1.25, maxY: 30, interactive: true }) : `<p class="note">No shot locations recorded for this season.</p>`}
+          ${shots.length ? `<div class="legend"><span>${shots.length} FGA charted. Bigger hex = more attempts.</span>
+            <span class="sw">FG%&nbsp;${FG_STEPS.map(([a, b, v]) => `<i style="background:var(${v})" title="${a}-${Math.min(b, 100)}%"></i>`).join("")}</span><span>&lt;30% → 60%+</span></div>` : ""}
+        </section>
+        <section>
+          <h3>Points by game · ${s.label} ${s.league}</h3>
+          <div class="bars">${barsSVG(sg, s.ppg)}</div>
+          <p class="note num" style="margin-top:12px">${s.gp} game${s.gp === 1 ? "" : "s"}${s.gs_known === false ? "" : `, ${s.gs} start${s.gs === 1 ? "" : "s"}`} · ${fmt(s.mpg)} MPG · ${fmt(s.fg)} FG% · ${fmt(s.tp)} 3P% on ${fmt(s.tpa)} 3PA · ${fmt(s.ft)} FT%</p>
+        </section>
+      </div>
+      <section>
+        <h3>Game log · ${s.label} ${s.league}</h3>
+        <div class="tblwrap"><table>
+          <thead><tr><th>Date</th><th class="l">Opponent</th><th class="l">Result</th>${COLS.map(([h]) => `<th>${h}</th>`).join("")}<th>FG</th><th>3P</th><th>FT</th></tr></thead>
+          <tbody id="glog">${gameRows(sg.slice(0, 10), !!s.parts)}</tbody>
+        </table></div>
+        ${sg.length > 10 ? `<button class="more" id="more">Show all ${sg.length} games</button>` : ""}
+      </section>
+    </div>`;
+    const more = $("#more", dlg);
+    if (more) more.onclick = () => { $("#glog", dlg).innerHTML = gameRows(sg, !!s.parts); more.remove(); };
+  }
+  if (!dlg.open) dlg.showModal();
+  if (location.hash !== "#" + p.slug) history.replaceState(null, "", "#" + p.slug);
+}
+function closePlayer() { const d = $("#dlg"); if (d.open) d.close(); }
+$("#dlg").addEventListener("close", () => { cur = null; hideTip(); if (location.hash) history.replaceState(null, "", location.pathname + location.search); });
+$("#dlg").addEventListener("click", e => {
+  if (e.target === e.currentTarget || e.target.closest("[data-close]")) return closePlayer();
+  const sb = e.target.closest("[data-season]"); if (sb && cur) openPlayer(cur, sb.dataset.season);
+});
+
+/* ---- tooltip ---- */
+const tip = $("#tip");
+function hideTip() { tip.hidden = true; document.querySelectorAll(".bar.on").forEach(b => b.classList.remove("on")); }
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest?.("[data-tip]");
+  document.querySelectorAll(".bar.on").forEach(b => b.classList.remove("on"));
+  if (!t) { tip.hidden = true; return; }
+  if (t.dataset.bar) t.previousElementSibling?.classList.add("on");
+  tip.textContent = t.dataset.tip; tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+
+/* ---- wiring ---- */
+$("#meta").innerHTML = `Games through ${dfmtY(DATA.data_through)}<br>Built ${dfmtY(DATA.built)}`;
+try { const ui = JSON.parse(localStorage.getItem("wnt-ui") || "{}"); if (ui.filter && FILTERS.some(f => f[0] === ui.filter)) filter = ui.filter; if (ui.sort) $("#sort").value = ui.sort; } catch (e) {}
+$("#q").addEventListener("input", render);
+$("#sort").addEventListener("change", render);
+$("#chips").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; render(); } });
+$("#grid").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openPlayer(P.find(p => p.slug === c.dataset.slug)); });
+function fromHash() { const p = P.find(x => "#" + x.slug === location.hash); if (p) openPlayer(p); else closePlayer(); }
+addEventListener("hashchange", fromHash);
+render();
+fromHash();
+</script>
