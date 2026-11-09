@@ -71,6 +71,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 
 .photo .tagl, .photo .logo { z-index: 1; }
 
 .cbody { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.kick .kt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 100%; }
 .kick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--red-ink); }
 .pill { font: 600 10.5px var(--body); letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; display: inline-flex; gap: 4px; align-items: center; }
 .pill.good { color: var(--good); background: var(--good-bg); }
@@ -269,7 +270,7 @@ function photoBlock(p, withTag = true) {
 }
 function lastLine(p) {
   const g = p.games[0];
-  return `<div class="last">Last game ${dfmt(g.d)} ${g.ha} ${esc(g.oppab || g.opp)}: <strong class="num">${g.pts} PTS · ${g.reb} REB · ${g.ast} AST</strong> in ${g.min} min</div>`;
+  return `<div class="last">Last game ${dfmt(g.d)} ${g.ha ? g.ha + " " : "vs "}${esc(g.oppab || g.opp)}<br><strong class="num">${g.pts} PTS · ${g.reb} REB · ${g.ast} AST</strong> in ${g.min} min</div>`;
 }
 const gamesFor = (p, s) => p.games.filter(g => g.s === s.key || (s.parts || []).includes(g.s));
 function prevLine(p) {
@@ -285,7 +286,7 @@ function card(p) {
   return `<button class="card" data-slug="${p.slug}" aria-label="Open ${esc(p.name)}">
     ${photoBlock(p)}
     <div class="cbody">
-      <div class="kick"><span>${p.covered ? s.league + " · " : ""}${esc(team)}</span><span class="pill ${p.st.cls}">${p.st.text}</span></div>
+      <div class="kick"><span class="kt">${p.covered ? esc(SHORT[s.league] || s.league) + " · " : ""}${esc(p.covered ? (s.short || team) : team)}</span><span class="pill ${p.st.cls}">${p.st.text}</span></div>
       <h2 class="name">${esc(p.name)}</h2>
       ${p.covered ? `
         <div class="stats num">
@@ -296,7 +297,7 @@ function card(p) {
         </div>
         ${lastLine(p)}
         <div class="mini">${shots.length ? courtSVG(shots, { r: 1.7, maxY: 27 }) : `<div class="nodata">No shot locations for this season.</div>`}</div>
-        <div class="foot num">${s.label} · ${s.gp} game${s.gp === 1 ? "" : "s"} · ${fmt(s.mpg)} min · ${shots.length} shots charted${prevLine(p)}</div>`
+`
       : `<div class="nodata">${esc(p.note || "Not covered by NCAA or WNBA data.")}</div>`}
     </div>
   </button>`;
@@ -348,7 +349,7 @@ function barsSVG(games, avg) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points by game"><g class="grid">${grid}</g>${bars}
     <line class="avg" x1="${pl}" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/><text x="${W}" y="${y(avg) - 4}" text-anchor="end" style="fill:var(--ink)">avg ${avg.toFixed(1)}</text>${labels}</svg>`;
 }
-const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "Liga Fem.", "Spain LF-2": "LF-2", "Spain LF Challenge": "LF Chall.", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
+const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "LF", "Spain LF-2": "LF-2", "Spain LF Challenge": "LF Challenge", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
 function gameRows(games, showComp = false) {
   return games.map(g => `<tr><td class="l">${dfmt(g.d)}</td><td class="l">${g.ha} ${esc(g.opp)}${g.po ? '<span class="badge">POST</span>' : ""}${showComp ? `<span class="badge">${esc(SHORT[g.s.split("|")[0]] || g.s.split("|")[0])}</span>` : ""}</td>
     <td class="l"><span class="wl ${g.wl}">${g.wl}</span> ${g.sc}</td>

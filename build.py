@@ -175,10 +175,29 @@ def build_player(p, box, shots, data_date, logos):
     }
 
 
-SHORT = {"Spain LF Challenge": "LF Challenge", "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup",
-         "Spain Liga Femenina": "Liga Femenina", "Spain LF-2": "LF-2", "Czech ZBL": "Czech ZBL",
-         "France LFB": "LFB", "Romania LNBF": "Romania LNBF", "Turkey KBSL": "Turkey KBSL",
-         "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "Baltic WBBL"}
+SHORT = {"Spain LF Challenge": "LF Challenge", "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup",
+         "SuperCup Women": "SuperCup", "Spain Liga Femenina": "LF", "Spain LF-2": "LF-2", "Czech ZBL": "ZBL",
+         "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL",
+         "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL"}
+CLUB_SHORT = {"toulouse metropole basket": "Toulouse", "hozono global jairis": "Jairis",
+              "azulmarino mallorca palma": "Mallorca", "acs sepsi sic sfantu gheorghe": "Sepsi",
+              "zvvz usk praha": "USK Praha", "zabiny brno": "Brno", "kibirkstis toks": "Kibirkštis",
+              "kibirkstis": "Kibirkštis", "alba berlin": "ALBA Berlin", "lulea basket": "Luleå"}
+CLUB_WORDS = {"basket", "basketball", "club", "bc", "cb", "acs", "asc", "sic", "cs", "csm", "csu", "kk", "zkk",
+              "bk", "wbc", "association", "metropole", "global", "hozono", "sas", "sasp", "sad", "a", "c", "de",
+              "la", "le", "sant", "josep", "sportul", "studentesc", "femxa", "zorka", "union", "feminine", "w",
+              "ac", "enea", "azs", "politechnika", "lotto", "umcs"}
+
+
+def club_short(name):
+    """Short club name for the card kicker and last-game line: 'Hozono Global Jairis' -> 'Jairis'."""
+    key = re.sub(r"[^a-z ]+", " ", (name or "").lower())
+    key = " ".join(key.split())
+    if key in CLUB_SHORT:
+        return CLUB_SHORT[key]
+    words = [w for w in (name or "").replace("-", " ").split() if w.lower().replace(".", "") not in CLUB_WORDS]
+    out = " ".join(words[:2]) or (name or "")
+    return out if len(out) <= 18 else words[0]
 
 
 def summarize_games(gs):
@@ -223,12 +242,12 @@ def merge_overseas(pl, games, shots, sources):
     first_logo = lambda gs: next((g["logo"] for g in gs if g.get("logo") and norm_team(g["team"]) == norm_team(gs[0]["team"])), None)
     for key, gs in by_comp.items():
         comp, label = key.split("|")
-        seasons.append({"key": key, "league": comp, "label": label, "team": gs[0]["team"],
+        seasons.append({"key": key, "league": comp, "label": label, "team": gs[0]["team"], "short": club_short(gs[0]["team"]),
                         "team_full": gs[0]["team"], "logo": first_logo(gs), "last": gs[0]["d"], **summarize_games(gs)})
     if len(by_comp) > 1:
         comps = sorted(by_comp, key=lambda k: -len(by_comp[k]))
         label = " + ".join(SHORT.get(k.split("|")[0], k.split("|")[0]) for k in comps)
-        seasons.append({"key": "All club|" + overseas.SEASON, "league": label,
+        seasons.append({"key": "All club|" + overseas.SEASON, "league": label, "short": club_short(games[0]["team"]),
                         "label": overseas.SEASON, "team": games[0]["team"], "team_full": games[0]["team"],
                         "logo": first_logo(games) or next((s["logo"] for s in seasons if s["logo"]), None),
                         "last": games[0]["d"], "parts": list(by_comp), **summarize_games(games)})
@@ -243,7 +262,7 @@ def merge_overseas(pl, games, shots, sources):
             LOGOS.setdefault(s["logo"], s["logo"])
     keep = [{k: v for k, v in g.items() if k not in ("comp", "logo", "no")} for g in games]
     for g in keep:
-        g["oppab"] = g["opp"]
+        g["oppab"] = club_short(g["opp"])
     last = games[0]
     pl.update({
         "covered": True,
