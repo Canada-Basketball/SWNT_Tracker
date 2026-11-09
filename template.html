@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: a scouting wall. Filter bar on top, a grid of player cards, a full player file in a dialog. */
-/* Layout: a scouting wall on Canada red. Red field with faded maple leaves, white player cards.
+/* Layout: white Canada Basketball banner, red gradient page, three wide player cards per row.
    One deliberate look in every theme (the red page is the brand), so there are no dark-mode overrides. */
 :root {
   --bg: #9d0b1b; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #eadfe0;
@@ -19,8 +19,6 @@
   --good: #1f7a4d; --good-bg: #e3f3ea; --warn: #8a5a00; --warn-bg: #fbefd6; --none: #5f5659; --none-bg: #ece7e8;
   --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
   --court: #d8cfd1; --bar: #d80621; --bar-dim: #e8b4bc;
-  --leaves: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22560%22 height=%22560%22%3E%3Cg fill=%22%23000%22 fill-opacity=%220.16%22%3E%3Cpath transform=%22translate%2840 30%29 rotate%28-18 50 50%29 scale%282.2%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28300 60%29 rotate%2822 50 50%29 scale%281.4%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28150 300%29 rotate%288 50 50%29 scale%283.0%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28420 330%29 rotate%28-30 50 50%29 scale%281.8%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28-60 420%29 rotate%2835 50 50%29 scale%281.6%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3C/g%3E%3C/svg%3E");
-  --panel-leaves: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22560%22 height=%22560%22%3E%3Cg fill=%22%23000%22 fill-opacity=%220.22%22%3E%3Cpath transform=%22translate%2840 30%29 rotate%28-18 50 50%29 scale%282.2%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28300 60%29 rotate%2822 50 50%29 scale%281.4%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28150 300%29 rotate%288 50 50%29 scale%283.0%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28420 330%29 rotate%28-30 50 50%29 scale%281.8%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3Cpath transform=%22translate%28-60 420%29 rotate%2835 50 50%29 scale%281.6%29%22 d=%22M50 5 L56 20 L64 15 L62 35 L76 25 L72 38 L88 36 L80 48 L92 54 L72 60 L76 70 L56 64 L54 82 L52 82 L52 95 L48 95 L48 82 L46 82 L44 64 L24 70 L28 60 L8 54 L20 48 L12 36 L28 38 L24 25 L38 35 L36 15 L44 20 Z%22/%3E%3C/g%3E%3C/svg%3E");
   --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -54,17 +52,19 @@ body { color: var(--ink); font-family: var(--body); font-size: 14px; line-height
   background-color: var(--bg);
   background-image: linear-gradient(180deg, #d0102e 0%, #a50c1f 40%, #6b0712 100%);
   background-attachment: fixed; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 22px 64px;
+.wrap { max-width: 1360px; margin: 0 auto; padding-block: 22px 64px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .num { font-variant-numeric: tabular-nums; }
 
 .banner { background: #ffffff; border-bottom: 4px solid #ba0c2f; box-shadow: 0 6px 24px rgba(60,0,8,.25);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.banner-in { max-width: 1240px; margin: 0 auto; padding-block: 14px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.banner-in { max-width: 1360px; margin: 0 auto; padding-block: 14px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .banner img { width: 64px; height: auto; flex: none; }
 .banner .bt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
 .banner .b1 { font: 600 12px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #ba0c2f; }
-.banner .b2 { font: 800 clamp(26px, 4.2vw, 44px)/0.95 var(--display); text-transform: uppercase; color: #1b1517; letter-spacing: .01em; text-wrap: balance; }
+.banner .b2 { font: 800 clamp(40px, 6vw, 68px)/0.88 var(--display); text-transform: uppercase; color: #1b1517; letter-spacing: .005em; text-wrap: balance; margin: 2px 0 0; text-shadow: none; }
+.banner .b2 span { display: block; font-size: .4em; letter-spacing: .12em; color: #ba0c2f; font-weight: 700; margin-top: 6px; }
+.banner img { width: 78px; }
 .banner .meta { color: #6c6064; }
 
 
@@ -92,26 +92,28 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 .controls select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 22px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+@media (max-width: 1020px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; } }
+@media (max-width: 640px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 .card { background: var(--surface); border-radius: 14px; overflow: hidden; cursor: pointer; text-align: left; border: 0; padding: 0; color: inherit; font: inherit;
   box-shadow: 0 2px 4px rgba(40,0,6,.25), 0 14px 34px rgba(40,0,6,.35); transition: transform .18s ease, box-shadow .18s ease; display: flex; flex-direction: column; }
 .card:hover { transform: translateY(-5px); box-shadow: 0 4px 8px rgba(40,0,6,.3), 0 24px 48px rgba(40,0,6,.45); }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
 
-.photo { position: relative; aspect-ratio: 5 / 4; max-width: 100%; overflow: hidden; color: var(--on-panel);
-  background: radial-gradient(circle at 50% 62%, #ff3b3b 0%, #e01226 28%, #a80c1d 62%, #6d0713 100%); }
-.photo::before { content: ""; position: absolute; inset: -20%; background: var(--panel-leaves); background-size: 300px 300px; transform: rotate(-8deg); }
-.photo .jn { position: absolute; right: 10px; top: -6px; font: 800 124px/1 var(--display); color: rgba(255,255,255,.16); letter-spacing: -.02em; -webkit-text-stroke: 1px rgba(255,255,255,.18); }
+.photo { position: relative; aspect-ratio: 16 / 11; max-width: 100%; overflow: hidden; color: var(--on-panel);
+  background: linear-gradient(180deg, #b30f2a 0%, #6e0a1b 100%); }
+.photo::before { content: "";  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(255,255,255,.06) 22px 24px); mask: linear-gradient(90deg, #000 0 40%, transparent 70%); }
+.photo .jn { position: absolute; right: 14px; top: -8px; font: 800 150px/1 var(--display); color: rgba(255,255,255,.13); letter-spacing: -.02em; }
 .photo img.head { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); height: 94%; width: auto; max-width: none; object-fit: contain; }
 .photo .init { position: absolute; inset: 0; display: grid; place-items: center; font: 800 64px var(--display); color: rgba(255,255,255,.55); }
 .photo .logo { position: absolute; left: 14px; top: 14px; width: 38px; height: 38px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 .photo .logo img { width: 28px; height: 28px; object-fit: contain; }
 .photo .tagl { position: absolute; left: 14px; bottom: 10px; font: 500 13px var(--mono); letter-spacing: .06em; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
-.photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 34%; background: linear-gradient(transparent, rgba(40,0,6,.55)); pointer-events: none; }
-.cbody { border-top: 4px solid var(--red); }
+.photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 30%; background: linear-gradient(transparent, rgba(0,0,0,.35)); pointer-events: none; }
 .photo .tagl, .photo .logo { z-index: 1; }
 
-.cbody { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.cbody { padding: 18px 24px 22px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
 .kick .kt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 100%; }
 .kick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--red-ink); }
 .pill { font: 600 10.5px var(--body); letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; display: inline-flex; gap: 4px; align-items: center; }
@@ -121,11 +123,11 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .pill.warn::before { border-radius: 1px; transform: rotate(45deg); }
 .pill.none::before { background: transparent; border: 1.5px solid currentColor; width: 5px; height: 5px; }
-.name { font: 800 27px/1 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; padding-bottom: 10px; border-bottom: 2px solid var(--ink); text-wrap: balance; }
+.name { font: 800 32px/1 var(--display); text-transform: uppercase; letter-spacing: .01em; margin: 0; padding-bottom: 10px; border-bottom: 2px solid var(--ink); text-wrap: balance; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.stats b { display: block; font: 700 25px/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.stats b { display: block; font: 700 30px/1.05 var(--display); font-variant-numeric: tabular-nums; }
 .stats span { font: 500 10.5px var(--mono); color: var(--muted); letter-spacing: .06em; }
-.last { font-size: 12.5px; color: var(--muted); }
+.last { font-size: 13.5px; color: var(--muted); }
 .last strong { color: var(--ink); font-weight: 600; }
 .mini { margin: 2px -4px 0; }
 .mini svg { display: block; width: 100%; height: auto; }
@@ -142,7 +144,7 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
 dialog::backdrop { background: rgba(15,8,10,.6); }
 .dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); background: linear-gradient(120deg, var(--panel), var(--panel-deep)); position: relative; }
-.dhead .photo .jn { font-size: 120px; color: rgba(255,255,255,.13); -webkit-text-stroke: 0; }
+.dhead .photo .jn { font-size: 120px; right: 10px; top: -6px; color: rgba(255,255,255,.13); -webkit-text-stroke: 0; }
 .dhead .photo { aspect-ratio: auto; height: 100%; min-height: 160px; background: transparent; }
 .dhead .photo::before, .dhead .photo::after { display: none; }
 .dhead .info { padding: 22px 56px 20px 8px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; min-width: 0; }
@@ -196,7 +198,7 @@ footer a { color: var(--on-red); }
 <header class="banner">
   <div class="banner-in">
     <img src="/*__CB_LOGO__*/" alt="Canada Basketball">
-    <div class="bt"><div class="b1">Canada Basketball</div><div class="b2">Senior Women's National Team Tracker</div></div>
+    <div class="bt"><div class="b1">Canada Basketball</div><h1 class="b2">Player Watch<span>Senior Women's National Team · 2026-27</span></h1></div>
     <div class="meta" id="meta"></div>
   </div>
 </header>
