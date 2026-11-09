@@ -1,4 +1,9 @@
-<title>Canada WNT Player Watch</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Canada SWNT Tracker</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,15 +27,46 @@
   color-scheme: light;
 }
 
+
+/* Player view: original palette, light and dark, unchanged by the page theme */
+dialog { --bg: #f4f1f1; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #e4dcdd;
+  --red: #c8102e; --red-ink: #b00e28; --panel: #b30f2a; --panel-deep: #6e0a1b; --on-panel: #ffffff;
+  --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
+  --court: #d8cfd1; --bar: #c8102e; --bar-dim: #e8b4bc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) dialog {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; } }
+:root[data-theme="dark"] dialog {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; }
+
 * { box-sizing: border-box; }
+html, body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
 body { color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; min-height: 100vh;
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,70,70,.55), transparent 70%),
-    var(--leaves), linear-gradient(180deg, #c3101f 0%, #8f0a18 45%, #5a0510 100%);
-  background-size: auto, 560px 560px, auto; background-attachment: fixed, fixed, fixed; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px;
+  background-image: linear-gradient(180deg, #d0102e 0%, #a50c1f 40%, #6b0712 100%);
+  background-attachment: fixed; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 22px 64px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .num { font-variant-numeric: tabular-nums; }
+
+.banner { background: #ffffff; border-bottom: 4px solid #ba0c2f; box-shadow: 0 6px 24px rgba(60,0,8,.25);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.banner-in { max-width: 1240px; margin: 0 auto; padding-block: 14px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.banner img { width: 64px; height: auto; flex: none; }
+.banner .bt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.banner .b1 { font: 600 12px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #ba0c2f; }
+.banner .b2 { font: 800 clamp(26px, 4.2vw, 44px)/0.95 var(--display); text-transform: uppercase; color: #1b1517; letter-spacing: .01em; text-wrap: balance; }
+.banner .meta { color: #6c6064; }
+
 
 header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 20px; }
 .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--on-red-soft); display: flex; align-items: center; gap: 10px; }
@@ -47,8 +83,10 @@ h1 span { display: block; font-size: .42em; letter-spacing: .12em; color: var(--
 .chip:hover { background: rgba(255,255,255,.2); }
 .chip[aria-pressed=true] { background: var(--on-red); color: var(--red-ink); border-color: var(--on-red); }
 .chip .ct { color: inherit; opacity: .7; margin-left: 4px; }
-.dbody .chip { background: var(--surface); color: var(--ink); border-color: var(--line); }
-.dbody .chip[aria-pressed=true] { background: var(--red-ink); color: #fff; border-color: var(--red-ink); }
+dialog .chip { font: 500 12.5px var(--body); padding: 6px 11px; background: var(--surface); color: var(--ink); border-color: var(--line); }
+dialog .chip:hover { background: var(--surface); }
+dialog .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+dialog .chip .ct { color: var(--muted); opacity: 1; }
 .chip[aria-pressed=true] .ct { color: inherit; opacity: .7; }
 .controls label { font-size: 12.5px; color: var(--on-red-soft); display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .controls select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
@@ -103,8 +141,8 @@ h1 span { display: block; font-size: .42em; letter-spacing: .12em; color: var(--
 /* dialog */
 dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
 dialog::backdrop { background: rgba(15,8,10,.6); }
-.dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); position: relative; overflow: hidden;
-  background: var(--panel-leaves), radial-gradient(circle at 15% 70%, #ff3b3b 0%, #d0102e 35%, #7a0814 100%); background-size: 320px 320px, auto; }
+.dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); background: linear-gradient(120deg, var(--panel), var(--panel-deep)); position: relative; }
+.dhead .photo .jn { font-size: 120px; color: rgba(255,255,255,.13); -webkit-text-stroke: 0; }
 .dhead .photo { aspect-ratio: auto; height: 100%; min-height: 160px; background: transparent; }
 .dhead .photo::before, .dhead .photo::after { display: none; }
 .dhead .info { padding: 22px 56px 20px 8px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; min-width: 0; }
@@ -152,15 +190,18 @@ footer a { color: var(--on-red); }
   .meta { text-align: left; }
 }
 </style>
+</head>
+<body>
 
-<div class="wrap">
-  <header class="top">
-    <div>
-      <div class="eyebrow">Canada Basketball</div>
-      <h1>Player Watch<span>Senior Women's National Team · 2026-27</span></h1>
-    </div>
+<header class="banner">
+  <div class="banner-in">
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDIzLjAuMywgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAyMTQyLjUgMjE4Ny45IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAyMTQyLjUgMjE4Ny45OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6I0JBMEMyRjt9Cgkuc3Qxe2ZpbGw6I0ZGRkZGRjt9Cjwvc3R5bGU+CjxnPgoJPGc+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTEwNzIuNywxOTg5LjhjNDQzLjIsMCw2NjctMzU2LjYsNjY3LTM1Ni42cy0zOS40LTE1LjgtNTQuMy0yMS42YzMyLjItMTYsODguOS00Ni41LDg4LjktNDYuNQoJCQljMTgwLjgtMzQ1LjYsNzguMy03MTQuMiw3OC4zLTcxNC4yYy0zMC4zLDQwLjUtNjEuMSw2Ni43LTYxLjEsNjYuN2MtMzguOS0yMjUuNS0xMzEuOC0zNTUuOC0xMzEuOC0zNTUuOAoJCQljLTQzLjcsMjYyLjUtMTU1LDQ1NC4zLTE1NSw0NTQuM2MxMjQuNy00NjcuOS00Mi41LTY5My4yLTQyLjUtNjkzLjJzLTUxLjYsNzgtMTA5LjEsMTQxLjJjMCwwLTExMi4xLTI3OC45LTI4MC4zLTQ2NC4xCgkJCUM5MDQuNCwxODUuMSw3OTIuMyw0NjQuMSw3OTIuMyw0NjQuMWMtNTcuNy02My4yLTEwOS4yLTE0MS4yLTEwOS4yLTE0MS4ycy0xNjcsMjI1LjQtNDIuNCw2OTMuMmMwLDAtMTExLjEtMTkxLjktMTU1LTQ1NC4zCgkJCWMwLDAtOTMuMSwxMzAuMy0xMzEuOCwzNTUuOGMwLDAtMzAuOC0yNi4yLTYxLjItNjYuN2MwLDAtMTAyLjQsMzY4LjYsNzguNCw3MTQuMmMwLDAsNTYuNywzMC41LDg4LjgsNDYuNQoJCQljLTE0LjgsNS44LTU0LjIsMjEuNi01NC4yLDIxLjZTNjI5LjMsMTk4OS44LDEwNzIuNywxOTg5LjgiLz4KCQk8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMTA3Mi43LDcwLjRjMTM3LjgsMTY2LjUsMjYwLjYsNDg0LjQsMjYwLjYsNDg0LjRjNzAuMy01MC41LDEyMC43LTE0NC41LDEyMC43LTE0NC41CgkJCXMxODEuOSw0MDAuNS0xNDguNCw5MzIuMmMwLDAsMzEzLjUtMjkyLjcsMzY4LjItNjcyLjljMCwwLDYzLjgsMTEwLDczLjgsMzE4LjZjMCwwLDI4LjUtNS40LDgxLjUtNTYuNWMwLDAsNDkuMSwyOTAuNi05NC4xLDU5OS43CgkJCWMwLDAtNzIuOSwzMS42LTEwNyw1NS43Yy04LjMsNS43LTE5LjksMTcuMy0zLjIsMjdjMTEuNiw2LjksNDYuNSwzMC41LDQ2LjUsMzAuNXMtMjE2LjgsMzAxLjEtNTk4LjYsMzAxLjEKCQkJYy0zODIsMC01OTguNy0zMDEuMS01OTguNy0zMDEuMXMzNC44LTIzLjYsNDYuNC0zMC41YzE2LjYtOS43LDUuMS0yMS4zLTMuMy0yN2MtMzQtMjQuMS0xMDcuMS01NS43LTEwNy4xLTU1LjcKCQkJYy0xNDIuOS0zMDktOTMuOS01OTkuNy05My45LTU5OS43YzUzLDUxLjIsODEuNCw1Ni41LDgxLjQsNTYuNWMxMC4yLTIwOC41LDczLjktMzE4LjYsNzMuOS0zMTguNgoJCQljNTQuNywzODAuMiwzNjguMSw2NzIuOSwzNjguMSw2NzIuOUM1MDkuMyw4MTAuNyw2OTEuMiw0MTAuMiw2OTEuMiw0MTAuMnM1MC4zLDk0LjEsMTIwLjYsMTQ0LjUKCQkJQzgxMS45LDU1NC44LDkzNC42LDIzNi45LDEwNzIuNyw3MC40Ii8+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTg0NS45LDYyOC4xbC0yLDRsLTQuOS0xYy03NS45LTM1LjctMTMxLjYtMTAxLjgtMTM5LTEyNi44Yy0zMi4zLDE5OC44LTguNiw0MjkuNiw1OC43LDU4NS43CgkJCWM1Mi4zLDEyMS42LDk5LjksMjM0LjcsMTQ5LjksMjk4YzUyLjYsNjYuNSw5NC40LDExOS4zLDk1LjMsMTg4LjJjMTUuOSwxLjQsMzIuOCwyLjIsNTEsMi44bC03LjEtMTM5OC41CgkJCUMxMDQ3LjcsMTgwLjYsODkzLjksNDQ5LjgsODQ1LjksNjI4LjEiLz4KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzQ2LjQsMTAxMi40YzQ3LjMsNDEuOCw4OS4xLDYyLjQsMTIzLjMsNjhsLTAuNy0wLjljLTEzLjEtNzQuNi0yMy42LTEyMC45LTEzLjYtMjc1LjYKCQkJYzUzLjcsMjA2LjgsMTQxLjksMzEwLjcsMTgyLDM3My41YzcyLjcsMTE0LjQsMTU4LjIsMTc1LjQsMjIxLDIzOC45YzU5LjYsNjAuNiwxMDMsMTA0LjUsMTA2LjEsMTU1LjQKCQkJYy0zMTUuNC00My4zLTYwNS4zLTI4OC4zLTYxNy44LTUzMy41QzM0Ni43LDEwMzguMywzNDQuOSwxMDIzLDM0Ni40LDEwMTIuNCIvPgoJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik04NzkuOCwxNjg0LjhjNDQuMS0xNC4zLDcyLjYtNDIuMiw4MS42LTc4LjljLTI0MS44LTkuMS00NzYuNy0xNjkuMS01ODEuNC0zMDMuMgoJCQljOSwzNi43LDQ3LjIsMTUxLjEsNjkuNywxOTUuOWMzMC40LDEyLjUsMTUxLjUsNjIuNywxNjMuNCw5OC4yYzUuMiwxNS40LTQwLjMsNDUuMi02MS4zLDQ5LjMKCQkJQzY0Ny44LDE3MjEuOSw4MDkuOSwxNzA3LjQsODc5LjgsMTY4NC44Ii8+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTEwNDUuMSwxOTAzLjdsNi42LTI5MS43Yy0yMi45LTAuNC0zNS4yLTEuMS01Mi4yLTIuNWMtMzAuNywxMjkuMS0yMzQuNiwxNTMuNy0zNjEuOSwxMzYuOAoJCQlDNjM3LjYsMTc0Ni4zLDgxMS45LDE5MDMuNywxMDQ1LjEsMTkwMy43Ii8+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTEyOTkuMiw2MjguMWwyLjIsNGw0LjgtMWM3NS43LTM1LjcsMTMxLjUtMTAxLjgsMTM5LTEyNi44YzMyLjMsMTk4LjgsOC41LDQyOS42LTU4LjcsNTg1LjcKCQkJYy01Mi4yLDEyMS42LTk5LjgsMjM0LjctMTQ5LjcsMjk4Yy01Mi43LDY2LjUtOTQuNSwxMTkuMy05NS41LDE4OC4yYy0xNS45LDEuNC0zMi43LDIuMi01MSwyLjhsNy4xLTEzOTguNQoJCQlDMTA5Ny41LDE4MC42LDEyNTEuNCw0NDkuOCwxMjk5LjIsNjI4LjEiLz4KCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTc5OC44LDEwMTIuNGMtNDcuMiw0MS44LTg5LjEsNjIuNC0xMjMuMyw2OGwwLjctMC45YzEzLjEtNzQuNiwyMy43LTEyMC45LDEzLjYtMjc1LjYKCQkJYy01My44LDIwNi44LTE0MiwzMTAuNy0xODIsMzczLjVjLTcyLjcsMTE0LjQtMTU4LjMsMTc1LjQtMjIxLjEsMjM4LjljLTU5LjcsNjAuNi0xMDMuMSwxMDQuNS0xMDYuMywxNTUuNAoJCQljMzE1LjUtNDMuMyw2MDUuNS0yODguMyw2MTgtNTMzLjVDMTc5OC41LDEwMzguMywxODAwLjMsMTAyMywxNzk4LjgsMTAxMi40Ii8+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTEyNjUuNCwxNjg0LjhjLTQ0LTE0LjMtNzIuNy00Mi4yLTgxLjYtNzguOWMyNDEuNy05LjEsNDc2LjktMTY5LjEsNTgxLjMtMzAzLjIKCQkJYy04LjksMzYuNy00Ny4xLDE1MS4xLTY5LjUsMTk1LjljLTMwLjQsMTIuNS0xNTEuNCw2Mi43LTE2My40LDk4LjJjLTUuMywxNS40LDQwLjIsNDUuMiw2MS4zLDQ5LjMKCQkJQzE0OTcuNCwxNzIxLjksMTMzNS4zLDE3MDcuNCwxMjY1LjQsMTY4NC44Ii8+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTExMDAuMSwxOTAzLjdsLTYuOC0yOTEuN2MyMy4xLTAuNCwzNS41LTEuMSw1Mi4zLTIuNWMzMC44LDEyOS4xLDIzNC43LDE1My43LDM2MS45LDEzNi44CgkJCUMxNTA3LjUsMTc0Ni4zLDEzMzMuMywxOTAzLjcsMTEwMC4xLDE5MDMuNyIvPgoJPC9nPgo8L2c+Cjwvc3ZnPgo=" alt="Canada Basketball">
+    <div class="bt"><div class="b1">Canada Basketball</div><div class="b2">Senior Women's National Team Tracker</div></div>
     <div class="meta" id="meta"></div>
-  </header>
+  </div>
+</header>
+<div class="wrap">
+
   <div class="controls">
     <input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
     <div class="chips" id="chips" role="group" aria-label="Filter players"></div>
@@ -454,3 +495,5 @@ addEventListener("hashchange", fromHash);
 render();
 fromHash();
 </script>
+</body>
+</html>

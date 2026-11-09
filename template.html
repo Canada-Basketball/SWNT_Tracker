@@ -1,4 +1,9 @@
-<title>Canada WNT Player Watch</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Canada SWNT Tracker</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,15 +27,46 @@
   color-scheme: light;
 }
 
+
+/* Player view: original palette, light and dark, unchanged by the page theme */
+dialog { --bg: #f4f1f1; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #e4dcdd;
+  --red: #c8102e; --red-ink: #b00e28; --panel: #b30f2a; --panel-deep: #6e0a1b; --on-panel: #ffffff;
+  --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
+  --court: #d8cfd1; --bar: #c8102e; --bar-dim: #e8b4bc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) dialog {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; } }
+:root[data-theme="dark"] dialog {
+  --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
+  --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
+  --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
+  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; }
+
 * { box-sizing: border-box; }
+html, body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
 body { color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; min-height: 100vh;
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255,70,70,.55), transparent 70%),
-    var(--leaves), linear-gradient(180deg, #c3101f 0%, #8f0a18 45%, #5a0510 100%);
-  background-size: auto, 560px 560px, auto; background-attachment: fixed, fixed, fixed; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 64px;
+  background-image: linear-gradient(180deg, #d0102e 0%, #a50c1f 40%, #6b0712 100%);
+  background-attachment: fixed; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 22px 64px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .num { font-variant-numeric: tabular-nums; }
+
+.banner { background: #ffffff; border-bottom: 4px solid #ba0c2f; box-shadow: 0 6px 24px rgba(60,0,8,.25);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.banner-in { max-width: 1240px; margin: 0 auto; padding-block: 14px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.banner img { width: 64px; height: auto; flex: none; }
+.banner .bt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.banner .b1 { font: 600 12px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #ba0c2f; }
+.banner .b2 { font: 800 clamp(26px, 4.2vw, 44px)/0.95 var(--display); text-transform: uppercase; color: #1b1517; letter-spacing: .01em; text-wrap: balance; }
+.banner .meta { color: #6c6064; }
+
 
 header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 20px; }
 .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--on-red-soft); display: flex; align-items: center; gap: 10px; }
@@ -47,8 +83,10 @@ h1 span { display: block; font-size: .42em; letter-spacing: .12em; color: var(--
 .chip:hover { background: rgba(255,255,255,.2); }
 .chip[aria-pressed=true] { background: var(--on-red); color: var(--red-ink); border-color: var(--on-red); }
 .chip .ct { color: inherit; opacity: .7; margin-left: 4px; }
-.dbody .chip { background: var(--surface); color: var(--ink); border-color: var(--line); }
-.dbody .chip[aria-pressed=true] { background: var(--red-ink); color: #fff; border-color: var(--red-ink); }
+dialog .chip { font: 500 12.5px var(--body); padding: 6px 11px; background: var(--surface); color: var(--ink); border-color: var(--line); }
+dialog .chip:hover { background: var(--surface); }
+dialog .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+dialog .chip .ct { color: var(--muted); opacity: 1; }
 .chip[aria-pressed=true] .ct { color: inherit; opacity: .7; }
 .controls label { font-size: 12.5px; color: var(--on-red-soft); display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .controls select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
@@ -103,8 +141,8 @@ h1 span { display: block; font-size: .42em; letter-spacing: .12em; color: var(--
 /* dialog */
 dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
 dialog::backdrop { background: rgba(15,8,10,.6); }
-.dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); position: relative; overflow: hidden;
-  background: var(--panel-leaves), radial-gradient(circle at 15% 70%, #ff3b3b 0%, #d0102e 35%, #7a0814 100%); background-size: 320px 320px, auto; }
+.dhead { display: grid; grid-template-columns: 170px 1fr; color: var(--on-panel); background: linear-gradient(120deg, var(--panel), var(--panel-deep)); position: relative; }
+.dhead .photo .jn { font-size: 120px; color: rgba(255,255,255,.13); -webkit-text-stroke: 0; }
 .dhead .photo { aspect-ratio: auto; height: 100%; min-height: 160px; background: transparent; }
 .dhead .photo::before, .dhead .photo::after { display: none; }
 .dhead .info { padding: 22px 56px 20px 8px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-end; min-width: 0; }
@@ -152,15 +190,18 @@ footer a { color: var(--on-red); }
   .meta { text-align: left; }
 }
 </style>
+</head>
+<body>
 
-<div class="wrap">
-  <header class="top">
-    <div>
-      <div class="eyebrow">Canada Basketball</div>
-      <h1>Player Watch<span>Senior Women's National Team · 2026-27</span></h1>
-    </div>
+<header class="banner">
+  <div class="banner-in">
+    <img src="/*__CB_LOGO__*/" alt="Canada Basketball">
+    <div class="bt"><div class="b1">Canada Basketball</div><div class="b2">Senior Women's National Team Tracker</div></div>
     <div class="meta" id="meta"></div>
-  </header>
+  </div>
+</header>
+<div class="wrap">
+
   <div class="controls">
     <input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
     <div class="chips" id="chips" role="group" aria-label="Filter players"></div>
@@ -454,3 +495,5 @@ addEventListener("hashchange", fromHash);
 render();
 fromHash();
 </script>
+</body>
+</html>

@@ -358,8 +358,10 @@ def main():
         "built": dt.date.today().isoformat(), "data_through": str(data_date),
         "current": current, "in_season": in_season, "players": players,
     }
+    logo_svg = (ROOT / "data" / "brand" / "cb-logo.svg").read_bytes()
     html = (ROOT / "template.html").read_text().replace(
-        "/*__DATA__*/null", json.dumps(payload, separators=(",", ":")))
+        "/*__DATA__*/null", json.dumps(payload, separators=(",", ":"))).replace(
+        "/*__CB_LOGO__*/", "data:image/svg+xml;base64," + base64.b64encode(logo_svg).decode())
     out = OUT
     if PUBLIC:  # same content as the private build, written to docs/ for GitHub Pages
         out = ROOT / "docs" / "index.html"
