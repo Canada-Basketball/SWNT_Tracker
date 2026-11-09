@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Daily refresh at 07:00 (launchd: ca.canadabasketball.wnt-player-watch)
-#  1. private build  -> site/index.html  (includes Eurobasket; internal use only, not committed)
-#  2. public build   -> docs/index.html  (no Eurobasket) -> pushed to GitHub Pages
+#  1. build          -> site/index.html  (local copy)
+#  2. public build   -> docs/index.html  (same content) -> pushed to GitHub Pages
 cd "$(dirname "$0")"
 LOG="logs/$(date +%F).log"
 mkdir -p logs

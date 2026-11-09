@@ -289,8 +289,6 @@ def main():
     # Eurobasket (org subscription; pages saved from a logged-in browser): fills leagues the other
     # sources lack and gives each player's current club. Games another source already has are skipped.
     for p in roster:
-        if PUBLIC:  # Eurobasket data is licensed for internal use only; never in the public build
-            break
         eb = eurobasket.load(p["eurobasket_id"]) if p.get("eurobasket_id") else None
         if not eb:
             continue
@@ -344,8 +342,7 @@ def main():
     html = (ROOT / "template.html").read_text().replace(
         "/*__DATA__*/null", json.dumps(payload, separators=(",", ":")))
     out = OUT
-    if PUBLIC:
-        html = html.replace(EB_NOTE.strip(), "Sweden, Germany and Baltic league games are not in this public version.")
+    if PUBLIC:  # same content as the private build, written to docs/ for GitHub Pages
         out = ROOT / "docs" / "index.html"
     out.parent.mkdir(exist_ok=True)
     out.write_text(html)
