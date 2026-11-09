@@ -170,12 +170,12 @@ def build_player(p, box, shots, data_date, logos):
         "photo": data_uri(last.athlete_headshot_href, 360),
         "team": last.team_location, "team_full": last.team_display_name,
         "team_color": "#" + (last.team_color or "666666"), "league": last.league,
-        "last_game": str(last.game_date), "days_since": days_since,
+        "last_game": str(last.game_date), "last_espn": str(last.game_date), "days_since": days_since,
         "seasons": seasons, "games": games, "shots": shot_map,
     }
 
 
-SHORT = {"EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup",
+SHORT = {"Spain LF Challenge": "LF Challenge", "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup",
          "Spain Liga Femenina": "Liga Femenina", "Spain LF-2": "LF-2", "Czech ZBL": "Czech ZBL",
          "France LFB": "LFB", "Romania LNBF": "Romania LNBF", "Turkey KBSL": "Turkey KBSL",
          "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "Baltic WBBL"}
@@ -197,26 +197,51 @@ def summarize_games(gs):
     }
 
 
+LOGOS = {}  # overseas club logo URLs to embed
+
+
+def club_logo_override(team):
+    """data/logos/<club-slug>.(png|jpg|webp|svg) replaces the source logo, e.g. data/logos/lulea-basket.png"""
+    folder = ROOT / "data" / "logos"
+    if not folder.exists():
+        return None
+    slug = re.sub(r"[^a-z0-9]+", "-", (team or "").lower()).strip("-")
+    hit = next(iter(sorted(folder.glob(slug + ".*"))), None)
+    return "local:" + str(hit) if hit else None
+
+
+def norm_team(name):
+    return re.sub(r"[^a-z]", "", (name or "").lower())[:8]
+
+
 def merge_overseas(pl, games, shots, sources):
     """Add club games from overseas.py: one season per competition plus an all-competitions total."""
     by_comp = {}
     for g in games:
         by_comp.setdefault(g["s"], []).append(g)
     seasons = []
+    first_logo = lambda gs: next((g["logo"] for g in gs if g.get("logo") and norm_team(g["team"]) == norm_team(gs[0]["team"])), None)
     for key, gs in by_comp.items():
         comp, label = key.split("|")
         seasons.append({"key": key, "league": comp, "label": label, "team": gs[0]["team"],
-                        "team_full": gs[0]["team"], "logo": None, "last": gs[0]["d"], **summarize_games(gs)})
+                        "team_full": gs[0]["team"], "logo": first_logo(gs), "last": gs[0]["d"], **summarize_games(gs)})
     if len(by_comp) > 1:
         comps = sorted(by_comp, key=lambda k: -len(by_comp[k]))
         label = " + ".join(SHORT.get(k.split("|")[0], k.split("|")[0]) for k in comps)
         seasons.append({"key": "All club|" + overseas.SEASON, "league": label,
                         "label": overseas.SEASON, "team": games[0]["team"], "team_full": games[0]["team"],
-                        "logo": None, "last": games[0]["d"], "parts": list(by_comp), **summarize_games(games)})
+                        "logo": first_logo(games) or next((s["logo"] for s in seasons if s["logo"]), None),
+                        "last": games[0]["d"], "parts": list(by_comp), **summarize_games(games)})
         shots = {**shots, "All club|" + overseas.SEASON: [s for v in shots.values() for s in v]}
     # the all-competitions row goes first when it exists, then newest competition first
     seasons.sort(key=lambda s: (s["last"], s["key"].startswith("All club")), reverse=True)
-    keep = [{k: v for k, v in g.items() if k not in ("comp",)} for g in games]
+    for s in seasons:
+        override = club_logo_override(s["team"])
+        if override:
+            s["logo"] = override
+        if s["logo"]:
+            LOGOS.setdefault(s["logo"], s["logo"])
+    keep = [{k: v for k, v in g.items() if k not in ("comp", "logo", "no")} for g in games]
     for g in keep:
         g["oppab"] = g["opp"]
     last = games[0]
@@ -229,6 +254,9 @@ def merge_overseas(pl, games, shots, sources):
         "sources": sorted(set(pl.get("sources", [])) | set(sources)),
     })
     pl["days_since"] = (dt.date.today() - dt.date.fromisoformat(pl["last_game"])).days
+    newest_no = next((g["no"] for g in games if g.get("no")), None)
+    if newest_no and (not pl.get("jersey") or games[0]["d"] > (pl.get("last_espn") or "")):
+        pl["jersey"] = newest_no  # club number from the latest overseas box score
     pl.setdefault("jersey", "")
     pl.setdefault("pos", "")
     pl.setdefault("photo", None)
@@ -299,7 +327,8 @@ def main():
         elif p.get("photo_espn_id"):
             pl["photo"] = data_uri("https://a.espncdn.com/i/headshots/womens-college-basketball/players/full/"
                                    f"{p['photo_espn_id']}.png", 360)
-    logo_uris = {u: data_uri(u, 96) for u in logos}
+    logos.update(LOGOS)
+    logo_uris = {u: (local_uri(Path(u[6:]), 96) if u.startswith("local:") else data_uri(u, 96)) for u in logos}
     for pl in players:
         for s in pl.get("seasons", []):
             s["logo"] = logo_uris.get(s["logo"]) if s["logo"] else None

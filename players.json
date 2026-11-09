@@ -16,7 +16,8 @@
    "person": 217051,
    "competition": 209090
   },
-  "pos": "G"
+  "pos": "G",
+  "eurobasket_id": 366290
  },
  {
   "name": "Sami Hill",
@@ -33,11 +34,13 @@
    "person": 188714,
    "competition": 209090
   },
-  "pos": "G"
+  "pos": "G",
+  "eurobasket_id": 259991
  },
  {
   "name": "Aari McDonald",
-  "espn_id": 4066553
+  "espn_id": 4066553,
+  "eurobasket_id": 406539
  },
  {
   "name": "Jasmine Bascoe",
@@ -53,7 +56,8 @@
  },
  {
   "name": "Bridget Carleton",
-  "espn_id": 3906972
+  "espn_id": 3906972,
+  "eurobasket_id": 297973
  },
  {
   "name": "Agot Makeer",
@@ -77,7 +81,8 @@
     "surname": "prosper",
     "team": "zvvz-usk-praha"
    }
-  ]
+  ],
+  "eurobasket_id": 618607
  },
  {
   "name": "Merissah Russell",
@@ -116,7 +121,8 @@
    "person": 196900,
    "competition": 208967
   },
-  "pos": "G"
+  "pos": "G",
+  "eurobasket_id": 260034
  },
  {
   "name": "Yvonne Ejim",
@@ -134,7 +140,8 @@
    "person": 172742,
    "competition": 209090
   },
-  "pos": "F"
+  "pos": "F",
+  "eurobasket_id": 441053
  },
  {
   "name": "Kayla Alexander",
@@ -142,15 +149,18 @@
   "fiba_photo": {
    "person": 161433,
    "competition": 208967
-  }
+  },
+  "eurobasket_id": 131400
  },
  {
   "name": "Aaliyah Edwards",
-  "espn_id": 4433408
+  "espn_id": 4433408,
+  "eurobasket_id": 441052
  },
  {
   "name": "Serah Williams",
-  "espn_id": 5108550
+  "espn_id": 5108550,
+  "eurobasket_id": 669260
  },
  {
   "name": "Toby Fournier",
@@ -176,7 +186,8 @@
    "person": 250669,
    "competition": 209090
   },
-  "pos": "C"
+  "pos": "C",
+  "eurobasket_id": 477478
  },
  {
   "name": "Niyah Becker",
@@ -218,6 +229,7 @@
  },
  {
   "name": "Laeticia Amihere",
-  "espn_id": 4432834
+  "espn_id": 4432834,
+  "eurobasket_id": 400079
  }
 ]

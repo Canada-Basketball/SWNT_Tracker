@@ -59,14 +59,16 @@ def norm(s):
 
 def tidy(name):
     name = " ".join(str(name or "").split())
+    name = re.sub(r"\s+(SAS|SASP|S\.A\.S\.?|SAD|S\.A\.D\.?)$", "", name, flags=re.I)  # company suffixes
     return name.title() if name.isupper() else name
 
 
-def game(d, s, comp, team, opp, home, team_pts, opp_pts, st, **stats):
+def game(d, s, comp, team, opp, home, team_pts, opp_pts, st, logo=None, no=None, **stats):
     team, opp = tidy(team), tidy(opp)
     g = {"d": d, "s": s, "comp": comp, "team": team, "po": False, "opp": opp, "oppab": "",
          "ha": "vs" if home else "@", "wl": "W" if team_pts > opp_pts else "L",
-         "sc": f"{team_pts}-{opp_pts}", "st": None if st is None else bool(st)}
+         "sc": f"{team_pts}-{opp_pts}", "st": None if st is None else bool(st),
+         "logo": logo or None, "no": str(no).strip() if no not in (None, "") else None}
     for k in ("min", "pts", "reb", "oreb", "ast", "stl", "blk", "tov", "pf",
               "fgm", "fga", "tpm", "tpa", "ftm", "fta"):
         g[k] = int(round(float(stats.get(k) or 0)))
@@ -85,6 +87,7 @@ def mmss(v):
 # --------------------------------------------------------------------------- FIBA
 FIBA = "https://digital-api.fiba.basketball/hapi"
 META = {}  # pool name -> {"jersey", "pos"} from FIBA rosters
+FIBA_LOGO = "https://assets.fiba.basketball/image/upload/w_200/f_png/.logoflag--light--organisation_{org}"
 FIBA_WOMEN_CLUB = {209127: "EuroLeague Women", 209128: "EuroCup Women", 209131: "SuperCup Women"}
 
 
@@ -132,6 +135,7 @@ def fiba_games(pool):
                 out.setdefault(name, []).append(game(
                     m_["gameDateTime"][:10], f"{FIBA_WOMEN_CLUB[comp]}|{SEASON}", FIBA_WOMEN_CLUB[comp],
                     r["teamName"], r["versusTeamName"], home, int(tp), int(op), None,
+                    logo=FIBA_LOGO.format(org=r["teamOrganisationId"]) if r.get("teamOrganisationId") else None,
                     min=(r.get("playDurationInSeconds") or 0) / 60, pts=r["points"], reb=r["rebounds"],
                     oreb=r["offensiveRebounds"], ast=r["assists"], stl=r["steals"], blk=r["blockedShots"],
                     tov=r["turnovers"], pf=r["personalFouls"], fgm=r["fieldGoalsMade"],
@@ -177,6 +181,8 @@ def genius_player_games(fixtures, comp, season_key, surname, club):
                 games.append(game(date, season_key, comp, t["name"], other["name"], tno == "1",
                                   int(t.get("full_score") or t.get("score")),
                                   int(other.get("full_score") or other.get("score")), p.get("starter"),
+                                  logo=(t.get("logoS") or {}).get("url") or (t.get("logoT") or {}).get("url"),
+                                  no=p.get("shirtNumber"),
                                   min=mmss(p.get("sMinutes")), pts=p["sPoints"], reb=p["sReboundsTotal"],
                                   oreb=p["sReboundsOffensive"], ast=p["sAssists"], stl=p["sSteals"],
                                   blk=p["sBlocks"], tov=p["sTurnovers"], pf=p["sFoulsPersonal"],
@@ -227,7 +233,8 @@ FEB = "https://baloncestoenvivo.feb.es"
 
 
 def feb_games(group, comp, players):
-    """players: {pool_name: 'S. HILL'} as FEB prints names. Scans every played game of the group."""
+    """players: {pool_name: 'S. HILL'} as FEB prints names ("initial. SURNAME").
+    Scans every played game of the group, so a move inside Spain is picked up automatically."""
     cal = _get(f"{FEB}/calendario.aspx?g={group}&t=2026").text
     # played games show a score as the link text; the exact date comes from each box score header
     played = sorted(set(re.findall(r"Partido\.aspx\?p=(\d+)['\"]>\s*\d+-\d+\s*<", cal)))
@@ -263,6 +270,7 @@ def feb_games(group, comp, players):
                         out.setdefault(pool_name, []).append(game(
                             date, f"{comp}|{SEASON}", comp, team["name"].title(), teams[1 - i]["name"].title(),
                             i == 0, tot[i], tot[1 - i], None,
+                            logo=d["HEADER"]["TEAM"][i].get("logo"), no=p.get("no"),
                             min=mmss(p.get("minFormatted")), pts=p.get("pts"), reb=p.get("rt"), oreb=p.get("ro"),
                             ast=p.get("assist"), stl=p.get("st"), blk=p.get("bs"), tov=p.get("to"),
                             pf=p.get("pf"), fgm=p.get("fgm"), fga=p.get("fga"), tpm=p.get("p3m"),
@@ -322,7 +330,7 @@ def zbl_games(player_id, surname, team_slug=None):
                 f2, f3, ft = (list(map(int, r[j].split("/"))) for j in (3, 4, 5))
                 out.append(game(f"{when.group(3)}-{int(when.group(2)):02d}-{int(when.group(1)):02d}",
                                 f"Czech ZBL|{SEASON}", "Czech ZBL", team, rows[1 - k][0], k == 0, pts[k], pts[1 - k],
-                                None, min=mmss(r[2]), pts=r[16], reb=r[8], oreb=r[6], ast=r[10], stl=r[11],
+                                None, no=r[0].strip(), min=mmss(r[2]), pts=r[16], reb=r[8], oreb=r[6], ast=r[10], stl=r[11],
                                 blk=r[9], tov=r[12], pf=r[14], fgm=f2[0] + f3[0], fga=f2[1] + f3[1], tpm=f3[0],
                                 tpa=f3[1], ftm=ft[0], fta=ft[1]))
     return out
@@ -361,7 +369,8 @@ def tbf_games(pool, competition="kbsl"):
                     out.setdefault(name, []).append(game(
                         m["matchDateOnly"], f"Turkey KBSL|{SEASON}", "Turkey KBSL", me["name"].title(),
                         op["name"].title(), side == "home", int(me["score"]), int(op["score"]),
-                        p in (box.get(f"{side}TopFive") or []), min=mmss(p["minutesPlayed"]), pts=p["points"],
+                        p in (box.get(f"{side}TopFive") or []), logo=me.get("logoUrl"), no=p.get("jerseyNumber"),
+                        min=mmss(p["minutesPlayed"]), pts=p["points"],
                         reb=p["totalRebounds"], oreb=p["offensiveRebounds"], ast=p["assists"], stl=p["steals"],
                         blk=p["blocks"], tov=p["turnovers"], pf=p["fouls"], fgm=p["successfulShots"],
                         fga=p["shotAttempts"], tpm=p["threePointShots"], tpa=p["threePointShotAttempts"],
@@ -422,10 +431,14 @@ def collect(roster, overseas_cfg):
             elif kind == "zbl":
                 steps.append((f"Czech ZBL · {name}", lambda name=name, src=src: add(
                     name, zbl_games(src["player_id"], src["surname"], src.get("team")), "ZBL")))
-    feb_names = {n: c["name"] for n, cfg in overseas_cfg.items() for c in cfg if c["source"] == "feb"}
+    # every pool player, as FEB prints names: first initial + surname ("K. ALEXANDER")
+    feb_names = {n: f"{norm(n.split()[0])[0].upper()}. {n.split()[-1].upper()}" for n in roster}
+    feb_names.update({n: c["name"] for n, cfg in overseas_cfg.items() for c in cfg if c["source"] == "feb"})
     if feb_names:
         steps.append(("Spain Liga Femenina", lambda: [add(n, g, "FEB") for n, g in
                                                       feb_games(4, "Spain Liga Femenina", feb_names).items()]))
+        steps.append(("Spain LF Challenge", lambda: [add(n, g, "FEB") for n, g in
+                                                     feb_games(67, "Spain LF Challenge", feb_names).items()]))
         steps.append(("Spain LF-2", lambda: [add(n, g, "FEB") for n, g in
                                              feb_games(9, "Spain LF-2", feb_names).items()]))
     for label, fn in steps:

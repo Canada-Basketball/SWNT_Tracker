@@ -348,7 +348,7 @@ function barsSVG(games, avg) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points by game"><g class="grid">${grid}</g>${bars}
     <line class="avg" x1="${pl}" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/><text x="${W}" y="${y(avg) - 4}" text-anchor="end" style="fill:var(--ink)">avg ${avg.toFixed(1)}</text>${labels}</svg>`;
 }
-const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "Liga Fem.", "Spain LF-2": "LF-2", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
+const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "Liga Fem.", "Spain LF-2": "LF-2", "Spain LF Challenge": "LF Chall.", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
 function gameRows(games, showComp = false) {
   return games.map(g => `<tr><td class="l">${dfmt(g.d)}</td><td class="l">${g.ha} ${esc(g.opp)}${g.po ? '<span class="badge">POST</span>' : ""}${showComp ? `<span class="badge">${esc(SHORT[g.s.split("|")[0]] || g.s.split("|")[0])}</span>` : ""}</td>
     <td class="l"><span class="wl ${g.wl}">${g.wl}</span> ${g.sc}</td>

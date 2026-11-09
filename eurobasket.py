@@ -26,6 +26,8 @@ ROW = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4}) (.+?) (\d+)-(\d+) (\d+) (\d+) (\
 def parse(path):
     text = Path(path).read_text()
     club = re.search(r"most recently played at (.+?) in (.+?)\.", text)
+    jersey = re.search(r"^JERSEY: (\S+)", text, re.M)
+    logo = re.search(r"^TEAMLOGO: (\S+)", text, re.M)
     fetched = re.search(r"^FETCHED: (\S+)", text, re.M)
     games, teams = [], {}
     league = None
@@ -58,10 +60,15 @@ def parse(path):
             "d": f"{yr}-{int(mo):02d}-{int(dy):02d}", "s": f"{league}|{SEASON}", "comp": league,
             "team": team, "po": False, "opp": opp, "oppab": opp, "ha": "", "wl": "W" if tp > op else "L",
             "sc": f"{tp}-{op}", "st": None, "min": int(r.group(7)), "pts": int(r.group(8)),
+            "logo": None, "no": jersey.group(1) if jersey else None,
             "fgm": f2m + f3m, "fga": f2a + f3a, "tpm": f3m, "tpa": f3a, "ftm": ftm, "fta": fta,
             "oreb": int(r.group(15)), "reb": int(r.group(17)), "ast": int(r.group(18)), "pf": int(r.group(19)),
             "blk": int(r.group(20)), "stl": int(r.group(21)), "tov": int(r.group(22)),
         })
+    if logo:  # logo applies to the player's current club games
+        for g in games:
+            if club and g["team"].split()[0].lower() in club.group(1).lower():
+                g["logo"] = logo.group(1)
     return {"games": games, "club": club.group(1) if club else None,
             "league": club.group(2) if club else None, "fetched": fetched.group(1) if fetched else None}
 
