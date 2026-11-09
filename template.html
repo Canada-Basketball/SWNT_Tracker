@@ -314,7 +314,9 @@ function render() {
     ppg: (a, b) => (cs(b).ppg ?? -1) - (cs(a).ppg ?? -1),
     name: (a, b) => a.name.split(" ").pop().localeCompare(b.name.split(" ").pop()),
   }[sortBy];
-  list.sort(by);
+  // cards with a shot chart first; players without one (or with no games) go last, whatever the sort
+  const hasChart = p => p.covered && (p.shots[p.seasons[0].key] || []).length > 0 ? 0 : 1;
+  list.sort((a, b) => hasChart(a) - hasChart(b) || by(a, b));
   $("#grid").innerHTML = list.length ? list.map(card).join("") : `<div class="empty">No players match. Clear the search or pick another filter.</div>`;
   $("#chips").innerHTML = FILTERS.map(([k, label, f]) => `<button class="chip" data-f="${k}" aria-pressed="${k === filter}">${label}<span class="ct num">${P.filter(f).length}</span></button>`).join("");
   try { localStorage.setItem("wnt-ui", JSON.stringify({ filter, sort: sortBy })); } catch (e) {}
