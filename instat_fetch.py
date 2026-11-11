@@ -9,6 +9,7 @@ leaves the previous file in place; run --login again.
 """
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -148,28 +149,33 @@ def fetch(ids, headless=True):
             pending.clear()
             return caps
 
+        def whole_season(tab):
+            """Both tabs default to "Last 10 games"; switch to the whole season (the app then remembers it).
+            Clicked from script, not with the mouse, because Hudl's side menu can cover the dropdown."""
+            opener = page.get_by_text(re.compile(r"^Last \d+ games$"))
+            if not opener.count():
+                return
+            try:
+                opener.first.dispatch_event("click")
+                time.sleep(1)
+                for label in ("All games of current season", "Current season", "All games of current year", "Current year"):
+                    opt = page.get_by_text(label, exact=True)
+                    if opt.count():
+                        opt.first.dispatch_event("click")
+                        time.sleep(PAUSE)
+                        return
+                print(f"  InStat: no season option on {tab}", flush=True)
+            except Exception as e:
+                print(f"  InStat: could not pick the season range on {tab} ({type(e).__name__})", flush=True)
+
         try:
             for pid in ids:
                 caps = []
                 visit(f"{BASE}/players/{pid}/matches")
-                for _ in range(4):  # the Games table loads box scores in batches as it scrolls
-                    page.mouse.move(800, 600)
-                    page.mouse.wheel(0, 4000)
-                    page.keyboard.press("End")
-                    time.sleep(1.5)
+                whole_season("Games")
                 caps += drain()
                 visit(f"{BASE}/players/{pid}/fieldgoals")
-                # shot range: "All games of current season" (the app remembers it after the first time).
-                # Clicked from script, not with the mouse, because Hudl's side menu can cover the dropdown.
-                opener = page.get_by_text("Last 10 games", exact=True)
-                if opener.count():
-                    try:
-                        opener.first.dispatch_event("click")
-                        time.sleep(1)
-                        page.get_by_text("All games of current season", exact=True).first.dispatch_event("click")
-                        time.sleep(PAUSE)
-                    except Exception:
-                        print("  InStat: could not pick the season range; shots cover the last 10 games")
+                whole_season("Field goals")
                 caps += drain()
                 rec = pack(pid, caps)
                 if rec["g"]:
