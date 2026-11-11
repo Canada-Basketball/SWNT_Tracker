@@ -1,0 +1,53 @@
+# Daily refresh on GitHub's servers (no laptop needed): InStat pull, build, publish to GitHub Pages.
+# Needs repository secrets HUDL_EMAIL and HUDL_PASSWORD. InStat data is fetched fresh each run and is
+# never committed or cached; only docs/index.html is pushed. If InStat fails, yesterday's page stays up.
+name: Daily refresh
+
+on:
+  schedule:
+    - cron: "0 12 * * *"   # 07:00 Toronto in winter (EST); 08:00 in summer
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: daily-refresh
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pandas pyarrow requests pillow playwright
+
+      # public feed caches only (SportsDataverse files, FIBA/LiveStats/FEB box scores)
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-${{ github.run_id }}
+          restore-keys: raw-
+
+      - name: InStat pull
+        env:
+          HUDL_EMAIL: ${{ secrets.HUDL_EMAIL }}
+          HUDL_PASSWORD: ${{ secrets.HUDL_PASSWORD }}
+        # Hudl rejects windowless Chrome, so Chrome runs in a virtual display
+        run: xvfb-run -a python instat_fetch.py
+
+      - name: Build page
+        run: python build.py --public
+
+      - name: Publish
+        run: |
+          if git diff --quiet -- docs/index.html; then echo "page unchanged"; exit 0; fi
+          git config user.name "jordanngo205"
+          git config user.email "jordanngo205@users.noreply.github.com"
+          git add docs/index.html
+          git commit -m "Daily data refresh $(date -u +%F)"
+          git push
