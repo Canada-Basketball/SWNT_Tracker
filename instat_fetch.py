@@ -122,7 +122,8 @@ def login():
 def fetch(ids, headless=True):
     out = instat.load()
     with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(PROFILE, channel="chrome", headless=headless)
+        ctx = p.chromium.launch_persistent_context(PROFILE, channel="chrome", headless=headless,
+                                                   viewport={"width": 1600, "height": 1000})
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         pending = []
         page.on("response", lambda r: pending.append(r) if "instatscout.com/data" in r.url else None)
@@ -153,18 +154,22 @@ def fetch(ids, headless=True):
                 visit(f"{BASE}/players/{pid}/matches")
                 caps += drain()
                 visit(f"{BASE}/players/{pid}/fieldgoals")
-                season = page.get_by_text("All games of current season")
-                if not page.get_by_text("All games of current season", exact=True).is_visible():
-                    opener = page.get_by_text("Last 10 games").first
-                    if opener.count():
-                        opener.click()
-                        season.first.click()
+                # shot range: "All games of current season" (the app remembers it after the first time).
+                # Clicked from script, not with the mouse, because Hudl's side menu can cover the dropdown.
+                opener = page.get_by_text("Last 10 games", exact=True)
+                if opener.count():
+                    try:
+                        opener.first.dispatch_event("click")
+                        time.sleep(1)
+                        page.get_by_text("All games of current season", exact=True).first.dispatch_event("click")
                         time.sleep(PAUSE)
+                    except Exception:
+                        print("  InStat: could not pick the season range; shots cover the last 10 games")
                 caps += drain()
                 rec = pack(pid, caps)
                 if rec["g"]:
                     out[str(pid)] = rec
-                print(f"  InStat {pid}: {len(rec['g'])} games, {sum(map(len, rec['s'].values()))} shots")
+                print(f"  InStat {pid}: {len(rec['g'])} games, {sum(map(len, rec['s'].values()))} shots", flush=True)
         except NeedLogin:
             print("  InStat: could not sign in - check .env or run --login; keeping previous data")
             ctx.close()
