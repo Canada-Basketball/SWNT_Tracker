@@ -152,6 +152,11 @@ def fetch(ids, headless=True):
             for pid in ids:
                 caps = []
                 visit(f"{BASE}/players/{pid}/matches")
+                for _ in range(4):  # the Games table loads box scores in batches as it scrolls
+                    page.mouse.move(800, 600)
+                    page.mouse.wheel(0, 4000)
+                    page.keyboard.press("End")
+                    time.sleep(1.5)
                 caps += drain()
                 visit(f"{BASE}/players/{pid}/fieldgoals")
                 # shot range: "All games of current season" (the app remembers it after the first time).
@@ -169,7 +174,9 @@ def fetch(ids, headless=True):
                 rec = pack(pid, caps)
                 if rec["g"]:
                     out[str(pid)] = rec
-                print(f"  InStat {pid}: {len(rec['g'])} games, {sum(map(len, rec['s'].values()))} shots", flush=True)
+                nobox = [g[1] for g in rec["g"] if len(g) < 26]
+                print(f"  InStat {pid}: {len(rec['g'])} games, {sum(map(len, rec['s'].values()))} shots"
+                      + (f", no box score yet: {', '.join(sorted(nobox))}" if nobox else ""), flush=True)
         except NeedLogin:
             print("  InStat: could not sign in - check .env or run --login; keeping previous data")
             ctx.close()
