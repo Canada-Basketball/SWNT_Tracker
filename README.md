@@ -25,7 +25,7 @@ The approach mirrors wehoop's `fiba_gdap_*`, `genius_*`, `feb_*` and `tbf_*` fun
 ## Run it
 
 ```
-python3 -m venv .venv && .venv/bin/pip install pandas pyarrow requests pillow
+python3 -m venv .venv && .venv/bin/pip install pandas pyarrow requests pillow playwright
 .venv/bin/python build.py              # download fresh data, write site/index.html
 .venv/bin/python build.py --offline    # reuse downloaded NCAA/WNBA files
 .venv/bin/python build.py --public     # same page, written to docs/index.html for GitHub Pages
@@ -37,7 +37,14 @@ Every build checks each game (points add up from the shooting splits, W/L matche
 
 `run_daily.sh` runs at 07:00 via a macOS launch agent (`~/Library/LaunchAgents/ca.canadabasketball.wnt-player-watch.plist`). It rebuilds the page, commits `docs/index.html` when it changes and pushes to GitHub Pages. If a build fails it keeps the previous page. Logs go to `logs/<date>.log`. The Mac must be on at 07:00.
 
-InStat is not part of the automatic run (no public API). To refresh it, open InStat in a logged-in Chrome, paste `instat_collect.js` into the console, run `await instatRun([...instat ids])`, click the red button and save the clipboard with `pbpaste > data/instat/2026-27.json` (or ask Claude to "refresh InStat"). Between refreshes the automatic feeds keep adding new games, without InStat shot charts until the next refresh.
+InStat is part of the daily run: `instat_fetch.py` opens Chrome with its own profile (`data/instat_profile/`), signs in with `HUDL_EMAIL` and `HUDL_PASSWORD` from `.env` when Hudl asks, and visits each player's Games and Field goals pages. Create `.env` yourself (it is git-ignored):
+
+```
+HUDL_EMAIL=...
+HUDL_PASSWORD=...
+```
+
+A Chrome window is open for about two minutes during the run, because Hudl rejects windowless Chrome. If the sign-in fails, the build uses the last saved InStat data and the log says so.
 
 ## Updating the pool
 
@@ -62,7 +69,8 @@ Overrides: drop an image in `data/photos/<player-slug>.png` (e.g. `sami-hill.png
 | `build.py` | Loads all sources, merges seasons, embeds photos/logos, writes the page |
 | `overseas.py` | FIBA, LiveStats, FEB, ŽBL and TBF collectors |
 | `instat.py` | Reads the saved InStat file into games and shot charts |
-| `instat_collect.js` | Browser collector for InStat |
+| `instat_fetch.py` | Daily InStat pull (Chrome via Playwright) |
+| `instat_collect.js` | Manual fallback: same collector, pasted into a logged-in InStat tab |
 | `template.html` | The page (cards, player file, shot chart) |
 | `run_daily.sh` | Daily build + push |
 | `docs/index.html` | Published page (GitHub Pages) |

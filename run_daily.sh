@@ -1,5 +1,6 @@
 #!/bin/zsh
 # Daily refresh at 07:00 (launchd: ca.canadabasketball.wnt-player-watch)
+#  0. InStat pull     -> data/instat/2026-27.json (signs in with .env)
 #  1. build          -> site/index.html  (local copy)
 #  2. public build   -> docs/index.html  (same content) -> pushed to GitHub Pages
 cd "$(dirname "$0")"
@@ -8,6 +9,8 @@ mkdir -p logs
 {
   echo "=== $(date) ==="
   cp site/index.html site/index.prev.html 2>/dev/null
+  if .venv/bin/python instat_fetch.py; then echo "InStat OK"
+  else echo "InStat FAILED - using the last saved InStat data"; fi
   if .venv/bin/python build.py; then echo "private build OK"
   else echo "PRIVATE BUILD FAILED - keeping yesterday's page"; cp site/index.prev.html site/index.html 2>/dev/null; fi
 

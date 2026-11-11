@@ -8,3 +8,5 @@ logs/
 site/
 site/index.prev.html
 data/eurobasket/
+data/instat_profile/
+.env
