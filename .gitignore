@@ -2,7 +2,7 @@ __pycache__/
 .DS_Store
 .venv/
 *.pyc
-data/eurobasket/
+data/instat/
 data/raw/
 logs/
 site/

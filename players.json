@@ -2,6 +2,7 @@
  {
   "name": "Shaina Pellington",
   "espn_id": null,
+  "instat_id": 32638,
   "team": "Toulouse Métropole Basket (France, LFB)",
   "note": "Pro in France",
   "overseas": [
@@ -16,12 +17,12 @@
    "person": 217051,
    "competition": 209090
   },
-  "pos": "G",
-  "eurobasket_id": 366290
+  "pos": "G"
  },
  {
   "name": "Sami Hill",
   "espn_id": null,
+  "instat_id": 2025395,
   "team": "Hozono Global Jairis (Spain, Liga Femenina + EuroCup)",
   "note": "Pro in Spain",
   "overseas": [
@@ -34,13 +35,12 @@
    "person": 188714,
    "competition": 209090
   },
-  "pos": "G",
-  "eurobasket_id": 259991
+  "pos": "G"
  },
  {
   "name": "Aari McDonald",
   "espn_id": 4066553,
-  "eurobasket_id": 406539
+  "instat_id": 121313
  },
  {
   "name": "Jasmine Bascoe",
@@ -57,7 +57,7 @@
  {
   "name": "Bridget Carleton",
   "espn_id": 3906972,
-  "eurobasket_id": 297973
+  "instat_id": 26760
  },
  {
   "name": "Agot Makeer",
@@ -74,6 +74,7 @@
  {
   "name": "Cassandre Prosper",
   "espn_id": 5122345,
+  "instat_id": 819218,
   "overseas": [
    {
     "source": "zbl",
@@ -81,12 +82,12 @@
     "surname": "prosper",
     "team": "zvvz-usk-praha"
    }
-  ],
-  "eurobasket_id": 618607
+  ]
  },
  {
   "name": "Merissah Russell",
   "espn_id": null,
+  "instat_id": 594183,
   "team": "Luleå Basket (Sweden, Damligan)",
   "note": "Last seen 2025-26 season",
   "overseas": [
@@ -95,17 +96,18 @@
     "name": "M. RUSSELL"
    }
   ],
-  "eurobasket_id": 441054,
   "photo_espn_id": 4703213,
   "fiba_photo": {
    "person": 235589,
    "competition": 208967
   },
-  "pos": "G"
+  "pos": "G",
+  "jersey": "13"
  },
  {
   "name": "Shay Colley",
   "espn_id": null,
+  "instat_id": 299499,
   "team": "Žabiny Brno (Czechia, ZBL + EuroCup)",
   "note": "Pro in Czechia",
   "overseas": [
@@ -121,12 +123,12 @@
    "person": 196900,
    "competition": 208967
   },
-  "pos": "G",
-  "eurobasket_id": 260034
+  "pos": "G"
  },
  {
   "name": "Yvonne Ejim",
   "espn_id": null,
+  "instat_id": 522738,
   "team": "Spain (club unconfirmed)",
   "note": "Sat out the 2026 WNBA season",
   "overseas": [
@@ -140,27 +142,26 @@
    "person": 172742,
    "competition": 209090
   },
-  "pos": "F",
-  "eurobasket_id": 441053
+  "pos": "F"
  },
  {
   "name": "Kayla Alexander",
   "espn_id": 2491232,
+  "instat_id": 13369,
   "fiba_photo": {
    "person": 161433,
    "competition": 208967
-  },
-  "eurobasket_id": 131400
+  }
  },
  {
   "name": "Aaliyah Edwards",
   "espn_id": 4433408,
-  "eurobasket_id": 441052
+  "instat_id": 553544
  },
  {
   "name": "Serah Williams",
   "espn_id": 5108550,
-  "eurobasket_id": 669260
+  "instat_id": 843270
  },
  {
   "name": "Toby Fournier",
@@ -169,6 +170,7 @@
  {
   "name": "Faith Dut",
   "espn_id": null,
+  "instat_id": 566870,
   "team": "ASC Sepsi SIC Sfântu Gheorghe (Romania, Liga Națională)",
   "note": "Pro in Romania",
   "overseas": [
@@ -186,15 +188,14 @@
    "person": 250669,
    "competition": 209090
   },
-  "pos": "C",
-  "eurobasket_id": 477478
+  "pos": "C"
  },
  {
   "name": "Niyah Becker",
   "espn_id": null,
+  "instat_id": 32636,
   "team": "Kibirkštis Vilnius (Lithuania + EuroLeague)",
   "note": "Signed for 2026-27",
-  "eurobasket_id": 400080,
   "photo_espn_id": 4398862,
   "fiba_photo": {
    "person": 217042,
@@ -205,9 +206,9 @@
  {
   "name": "Tara Wallack",
   "espn_id": null,
+  "instat_id": 639832,
   "team": "ALBA Berlin (Germany DBBL + EuroCup)",
   "note": "Signed for 2026-27, from Sopron",
-  "eurobasket_id": 520144,
   "photo_espn_id": 4899070,
   "fiba_photo": {
    "person": 266912,
@@ -230,6 +231,6 @@
  {
   "name": "Laeticia Amihere",
   "espn_id": 4432834,
-  "eurobasket_id": 400079
+  "instat_id": 562260
  }
 ]

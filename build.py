@@ -14,7 +14,7 @@ import pandas as pd
 import requests
 from PIL import Image
 
-import eurobasket
+import instat
 import overseas
 
 ROOT = Path(__file__).parent
@@ -178,11 +178,13 @@ def build_player(p, box, shots, data_date, logos):
 SHORT = {"Spain LF Challenge": "LF Challenge", "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup",
          "SuperCup Women": "SuperCup", "Spain Liga Femenina": "LF", "Spain LF-2": "LF-2", "Czech ZBL": "ZBL",
          "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL",
-         "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL"}
+         "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL",
+         "France Cup": "Coupe", "Spain Supercopa": "Supercopa"}
 CLUB_SHORT = {"toulouse metropole basket": "Toulouse", "hozono global jairis": "Jairis",
               "azulmarino mallorca palma": "Mallorca", "acs sepsi sic sfantu gheorghe": "Sepsi",
               "zvvz usk praha": "USK Praha", "zabiny brno": "Brno", "kibirkstis toks": "Kibirkštis",
-              "kibirkstis": "Kibirkštis", "alba berlin": "ALBA Berlin", "lulea basket": "Luleå"}
+              "kibirkstis": "Kibirkštis", "alba berlin": "ALBA Berlin", "lulea basket": "Luleå",
+              "probelte jairis": "Jairis", "bk basket zabiny brno": "Brno", "vilniaus kibirkstis": "Kibirkštis"}
 CLUB_WORDS = {"basket", "basketball", "club", "bc", "cb", "acs", "asc", "sic", "cs", "csm", "csu", "kk", "zkk",
               "bk", "wbc", "association", "metropole", "global", "hozono", "sas", "sasp", "sad", "a", "c", "de",
               "la", "le", "sant", "josep", "sportul", "studentesc", "femxa", "zorka", "union", "feminine", "w",
@@ -283,8 +285,6 @@ def merge_overseas(pl, games, shots, sources):
 
 
 PUBLIC = "--public" in sys.argv
-EB_NOTE = ("    Eurobasket (Canada Basketball subscription, internal use) fills Sweden, Germany and the Baltic league "
-           "and confirms current clubs. ")
 
 
 def main():
@@ -305,22 +305,24 @@ def main():
     print("overseas club games...")
     og, osh, osrc = overseas.collect([p["name"] for p in roster],
                                      {p["name"]: p["overseas"] for p in roster if p.get("overseas")})
-    # Eurobasket (org subscription; pages saved from a logged-in browser): fills leagues the other
-    # sources lack and gives each player's current club. Games another source already has are skipped.
+    # Hudl InStat (org subscription; collected in a logged-in browser with instat_collect.js): full box
+    # scores and shot locations for every club game it covers. It replaces the other feeds' rows for the
+    # same dates; their logo and jersey number are kept. Matched by InStat id, not by name.
+    idata = instat.load()
     for p in roster:
-        eb = eurobasket.load(p["eurobasket_id"]) if p.get("eurobasket_id") else None
-        if not eb:
+        ig, ish = instat.player(idata, p.get("instat_id"))
+        if not ig:
             continue
-        have = {g["d"] for g in og.get(p["name"], [])}
-        extra = [g for g in eb["games"] if g["d"] not in have]
-        if extra:
-            og.setdefault(p["name"], []).extend(extra)
-            og[p["name"]].sort(key=lambda g: g["d"], reverse=True)
-            osrc.setdefault(p["name"], []).append("Eurobasket")
-        pl = next(x for x in players if x["name"] == p["name"])
-        if eb["club"]:
-            pl["eb_club"] = f'{eb["club"]} ({eb["league"]})'
-            pl["eb_checked"] = eb["fetched"]
+        name, old = p["name"], og.get(p["name"], [])
+        by_date = {g["d"]: g for g in old}
+        for g in ig:
+            o = by_date.get(g["d"])
+            if o:
+                g.update(logo=o.get("logo"), no=o.get("no"), st=o.get("st"))
+        rest = [g for g in old if g["d"] not in {g["d"] for g in ig}]
+        og[name] = sorted(ig + rest, key=lambda g: g["d"], reverse=True)
+        osh[name] = {**osh.get(name, {}), **ish}
+        osrc[name] = sorted(set(osrc.get(name, [])) | {"Hudl InStat"}) if rest else ["Hudl InStat"]
     for pl in players:
         if og.get(pl["name"]):
             merge_overseas(pl, og[pl["name"]], osh.get(pl["name"], {}), osrc.get(pl["name"], []))
@@ -328,8 +330,8 @@ def main():
     # photos for players without a current ESPN headshot: data/photos/<slug>.* first, then ESPN college photo
     for p, pl in zip(roster, players):
         meta = overseas.META.get(p["name"], {})
-        if not pl.get("jersey") and meta.get("jersey"):
-            pl["jersey"] = meta["jersey"]
+        if not pl.get("jersey") and (meta.get("jersey") or p.get("jersey")):
+            pl["jersey"] = meta.get("jersey") or p["jersey"]
         if not pl.get("pos") and (meta.get("pos") or p.get("pos")):
             pl["pos"] = meta.get("pos") or p["pos"]
         if pl.get("photo"):

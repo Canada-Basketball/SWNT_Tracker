@@ -16,7 +16,7 @@ Each card shows the player's photo, number, club logo, current status ("Played 3
 | Spain Liga Femenina, LF Challenge, LF-2 | Spanish federation (FEB) | Every played game is scanned for every pool player |
 | Czechia ŽBL | zbl.basketball | Server-rendered box scores |
 | Turkey KBSL | Turkish federation (TBF) | Public app API; every game scanned |
-| Sweden, Germany DBBL, Baltic WBBL, current clubs | [Eurobasket.com](https://www.eurobasket.com/) | Canada Basketball subscription; pages read in a logged-in browser and saved to `data/eurobasket/` (not committed) |
+| All overseas club games (main source) | [Hudl InStat](https://www.hudl.com/products/instat) | Canada Basketball subscription. Full box scores and shot locations, collected in a logged-in browser and saved to `data/instat/` (not committed). Replaces the feeds above for the same games |
 
 The approach mirrors wehoop's `fiba_gdap_*`, `genius_*`, `feb_*` and `tbf_*` functions. Finished games are cached in `data/raw/overseas/`, so each run only fetches new games.
 
@@ -37,7 +37,7 @@ Every build checks each game (points add up from the shooting splits, W/L matche
 
 `run_daily.sh` runs at 07:00 via a macOS launch agent (`~/Library/LaunchAgents/ca.canadabasketball.wnt-player-watch.plist`). It rebuilds the page, commits `docs/index.html` when it changes and pushes to GitHub Pages. If a build fails it keeps the previous page. Logs go to `logs/<date>.log`. The Mac must be on at 07:00.
 
-Eurobasket is not part of the automatic run: Eurobasket blocks scripts. Refresh those pages in a logged-in browser (ask Claude to "refresh Eurobasket"), especially when a card shows "No games in 14d".
+InStat is not part of the automatic run (no public API). To refresh it, open InStat in a logged-in Chrome, paste `instat_collect.js` into the console, run `await instatRun([...instat ids])`, click the red button and save the clipboard with `pbpaste > data/instat/2026-27.json` (or ask Claude to "refresh InStat"). Between refreshes the automatic feeds keep adding new games, without InStat shot charts until the next refresh.
 
 ## Updating the pool
 
@@ -48,7 +48,8 @@ Edit `players.json`. Fields:
 | `name` | Display name; also used to match box scores |
 | `espn_id` | ESPN athlete id for NCAA/WNBA players |
 | `overseas` | Club sources: `lfb`, `genius_hosted` (org + comp_id), `feb`, `zbl` (player_id + team slug) |
-| `eurobasket_id` | Links the saved Eurobasket page in `data/eurobasket/` |
+| `instat_id` | Hudl InStat player id. Matching is by id, not name (InStat uses league-feed names, e.g. "Samantha Elizabeth Holli Hill") |
+| `jersey` | Fallback number when no box score has one |
 | `fiba_photo` | `{person, competition}` for the FIBA headshot |
 | `team`, `note`, `pos` | Fallbacks shown when a source has nothing |
 
@@ -60,7 +61,8 @@ Overrides: drop an image in `data/photos/<player-slug>.png` (e.g. `sami-hill.png
 |---|---|
 | `build.py` | Loads all sources, merges seasons, embeds photos/logos, writes the page |
 | `overseas.py` | FIBA, LiveStats, FEB, ŽBL and TBF collectors |
-| `eurobasket.py` | Parses saved Eurobasket pages |
+| `instat.py` | Reads the saved InStat file into games and shot charts |
+| `instat_collect.js` | Browser collector for InStat |
 | `template.html` | The page (cards, player file, shot chart) |
 | `run_daily.sh` | Daily build + push |
 | `docs/index.html` | Published page (GitHub Pages) |

@@ -221,7 +221,7 @@ footer a { color: #ba0c2f; }
   <footer>
     NCAA and WNBA: ESPN box scores and shot locations via <a href="https://www.sportsdataverse.org/" target="_blank" rel="noopener">SportsDataverse</a> (wehoop).
     Overseas: FIBA (EuroLeague and EuroCup Women), FIBA LiveStats (France LFB, Romania LNBF, with shot locations), the Spanish federation (Liga Femenina), ŽBL (Czechia) and the Turkish federation (KBSL).
-    Sweden, Germany and Baltic league stats and current clubs: <a href="https://www.eurobasket.com/" target="_blank" rel="noopener">Eurobasket.com</a>. Each card shows the player's most recent season; for club players that is all 2026-27 club games combined.
+    Club box scores and shot locations for overseas players: <a href="https://www.hudl.com/products/instat" target="_blank" rel="noopener">Hudl InStat</a>. Each card shows the player's most recent season; for club players that is all 2026-27 club games combined.
     TS% = PTS ÷ (2 × (FGA + 0.44 × FTA)). Shot charts leave out free throws.
   </footer>
 </div>
@@ -400,7 +400,7 @@ function barsSVG(games, avg) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points by game"><g class="grid">${grid}</g>${bars}
     <line class="avg" x1="${pl}" x2="${W}" y1="${y(avg)}" y2="${y(avg)}"/><text x="${W}" y="${y(avg) - 4}" text-anchor="end" style="fill:var(--ink)">avg ${avg.toFixed(1)}</text>${labels}</svg>`;
 }
-const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "LF", "Spain LF-2": "LF-2", "Spain LF Challenge": "LF Challenge", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL" };
+const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "SuperCup Women": "SuperCup", "Spain Liga Femenina": "LF", "Spain LF-2": "LF-2", "Spain LF Challenge": "LF Challenge", "Czech ZBL": "ZBL", "France LFB": "LFB", "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL", "France Cup": "Coupe", "Spain Supercopa": "Supercopa" };
 function gameRows(games, showComp = false) {
   return games.map(g => `<tr><td class="l">${dfmt(g.d)}</td><td class="l">${g.ha} ${esc(g.opp)}${g.po ? '<span class="badge">POST</span>' : ""}${showComp ? `<span class="badge">${esc(SHORT[g.s.split("|")[0]] || g.s.split("|")[0])}</span>` : ""}</td>
     <td class="l"><span class="wl ${g.wl}">${g.wl}</span> ${g.sc}</td>
@@ -424,7 +424,7 @@ function openPlayer(p, skey) {
     const last5 = sg.slice(0, 5);
     const posName = { G: "Guard", F: "Forward", C: "Center" }[p.pos] || p.pos;
     const kick = `${p.jersey ? "#" + esc(p.jersey) + " · " : ""}${esc(posName)}`;
-    dlg.innerHTML = head(`${esc(p.seasons[0].team_full)} · ${p.seasons[0].league} · last game ${dfmtY(p.last_game)}<br><span style="opacity:.75">Source: ${esc((p.sources || []).join(", "))}${p.eb_club ? ` · Current club per Eurobasket: ${esc(p.eb_club)}, checked ${dfmt(p.eb_checked)}` : ""}</span>`, kick) + `
+    dlg.innerHTML = head(`${esc(p.seasons[0].team_full)} · ${p.seasons[0].league} · last game ${dfmtY(p.last_game)}<br><span style="opacity:.75">Source: ${esc((p.sources || []).join(", "))}</span>`, kick) + `
     <div class="dbody">
       <section>
         <h3>Season averages</h3>
