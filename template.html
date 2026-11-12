@@ -138,12 +138,8 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 
 /* court */
 .court line, .court path, .court rect, .court circle.ln { fill: none; stroke: var(--court); stroke-width: .22; }
-svg.shots .bg { fill: #0b0d19; }
-svg.shots .court line, svg.shots .court path, svg.shots .court rect, svg.shots .court circle.ln { stroke: rgba(255,255,255,.55); }
-.dot:hover { stroke: #fff; stroke-width: .25; }
-.legend b.fq { display: inline-block; border-radius: 50%; background: var(--muted); margin-right: 2px; }
-.legend b.pt { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 1px; }
-.legend em { font-style: normal; margin: 0 4px; }
+.hex { stroke: var(--surface); stroke-width: .18; }
+.hex:hover { stroke: var(--ink); stroke-width: .3; }
 
 /* dialog */
 dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
@@ -262,33 +258,34 @@ function status(p) {
 function seasonLabel(key) { const [lg, y] = key.split("-"); return lg === "NCAA" ? `${+y - 1}-${String(y).slice(2)}` : y; }
 const P = DATA.players.map(p => ({ ...p, slug: slug(p.name), st: status(p) }));
 
-/* ---- shot chart (dots on half court; feet, rim at 25,0) ----
-   Shots are grouped into small areas (about 2 ft across) and each dot sits at the average spot of the
-   shots in it, so dots appear only where she actually shot. Size = number of shots there.
-   Colour = points per shot there (blue cold, yellow ~1.0, red hot). */
-const POT = ["#3b4ea3", "#4566b8", "#3f86cf", "#3fa9e0", "#56c4e6", "#f4d31a", "#f6b225", "#f28f24", "#ec6a26", "#e3412b"];
-const POT_LO = 0.5, POT_HI = 1.5, CELL = 2.2;
-const potColor = v => POT[Math.max(0, Math.min(POT.length - 1, Math.floor((v - POT_LO) / (POT_HI - POT_LO) * POT.length)))];
-const CORNER_Y = Math.sqrt(22.15 ** 2 - 22 ** 2);
-const isThree = (x, y) => Math.abs(x - 25) >= 22 && y <= CORNER_Y ? true : Math.hypot(x - 25, y) > 22.15;
-function courtSVG(shots, { maxY = 30, interactive = false } = {}) {
-  const top = -5.25, W = 50, H = maxY - top, r = CELL, h = r * 0.866;
-  const bins = new Map();
+/* ---- shot chart (hexbin on half court; feet, rim at 0,0) ---- */
+const FG_STEPS = [[0, 30, "--h1"], [30, 40, "--h2"], [40, 50, "--h3"], [50, 60, "--h4"], [60, 101, "--h5"]];
+const fgVar = pct => FG_STEPS.find(([a, b]) => pct >= a && pct < b)[2];
+function courtSVG(shots, { r = 1.5, maxY = 30, interactive = false } = {}) {
+  const top = -5.25, W = 50, H = maxY - top;
+  const bins = new Map(), w = Math.sqrt(3) * r, h = 1.5 * r;
   for (const [x, y, m] of shots) {
     if (y > maxY) continue;
-    const row = Math.round((y - top) / h), off = (row & 1) ? r / 2 : 0, k = row + ":" + Math.round((x - off) / r);
-    const c = bins.get(k) || { sx: 0, sy: 0, n: 0, m: 0, p: 0 };
-    c.sx += x; c.sy += y; c.n++; c.m += m; c.p += m ? (isThree(x, y) ? 3 : 2) : 0; bins.set(k, c);
+    let row = Math.round((y - top) / h), off = (row & 1) ? w / 2 : 0;
+    let col = Math.round((x - off) / w);
+    // check neighbours for the true nearest hex centre
+    let best = null, bd = 1e9;
+    for (const dr of [-1, 0, 1]) { const rr = row + dr, o = (rr & 1) ? w / 2 : 0;
+      for (const dc of [-1, 0, 1]) { const cc = Math.round((x - o) / w) + dc, cx = cc * w + o, cy = rr * h + top;
+        const dd = (x - cx) ** 2 + (y - cy) ** 2; if (dd < bd) { bd = dd; best = [rr, cc, cx, cy]; } } }
+    const k = best[0] + ":" + best[1];
+    const b = bins.get(k) || { cx: best[2], cy: best[3], n: 0, m: 0 };
+    b.n++; b.m += m; bins.set(k, b);
   }
-  const cells = [...bins.values()].map(c => ({ ...c, gx: c.sx / c.n, gy: c.sy / c.n }));
-  const max = Math.max(1, ...cells.map(c => c.n));
-  let dots = "";
-  for (const c of cells.sort((a, b) => a.n - b.n)) {
-    const rad = r * 0.5 * (0.35 + 0.65 * Math.sqrt(c.n / max));
-    dots += `<circle class="dot" cx="${c.gx.toFixed(2)}" cy="${c.gy.toFixed(2)}" r="${rad.toFixed(2)}" fill="${potColor(c.p / c.n)}"${interactive
-      ? ` data-tip="${c.n} FGA · ${c.m} made · ${(100 * c.m / c.n).toFixed(0)}% · ${(c.p / c.n).toFixed(2)} pts/shot"` : ""}/>`;
+  const max = Math.max(1, ...[...bins.values()].map(b => b.n));
+  const hexPath = (cx, cy, s) => { let d = ""; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30);
+      d += (i ? "L" : "M") + (cx + s * Math.cos(a)).toFixed(2) + "," + (cy + s * Math.sin(a)).toFixed(2); } return d + "Z"; };
+  let hexes = "";
+  for (const b of [...bins.values()].sort((a, c) => a.n - c.n)) {
+    const s = r * (0.35 + 0.65 * Math.sqrt(b.n / max)), pct = 100 * b.m / b.n;
+    hexes += `<path class="hex" d="${hexPath(b.cx, b.cy, s)}" style="fill:var(${fgVar(pct)})"${interactive ? ` data-tip="${b.n} FGA · ${b.m} made · ${pct.toFixed(0)}%"` : ""}/>`;
   }
-  const yb = top, ftY = 19 + top;
+  const yb = top, ftY = 19 + top, cornerY = Math.sqrt(22.15 ** 2 - 22 ** 2);
   const court = `<g class="court">
     <line x1="0" y1="${yb}" x2="50" y2="${yb}"/>
     <rect x="17" y="${yb}" width="16" height="19"/>
@@ -296,13 +293,10 @@ function courtSVG(shots, { maxY = 30, interactive = false } = {}) {
     <path d="M21,0 A4,4 0 0 0 29,0"/>
     <circle class="ln" cx="25" cy="0" r=".75"/>
     <line x1="22" y1="-1.25" x2="28" y2="-1.25"/>
-    <path d="M3,${yb} L3,${CORNER_Y.toFixed(2)} A22.15,22.15 0 0 0 47,${CORNER_Y.toFixed(2)} L47,${yb}"/>
+    <path d="M3,${yb} L3,${cornerY.toFixed(2)} A22.15,22.15 0 0 0 47,${cornerY.toFixed(2)} L47,${yb}"/>
   </g>`;
-  return `<svg class="shots" viewBox="-1 ${top - 0.6} ${W + 2} ${H + 1.2}" role="img" aria-label="Shot chart, ${shots.length} field-goal attempts"><rect class="bg" x="-1" y="${top - 0.6}" width="${W + 2}" height="${H + 1.2}" rx="1"/>${court}${dots}</svg>`;
+  return `<svg viewBox="-1 ${top - 0.6} ${W + 2} ${H + 1.2}" role="img" aria-label="Shot chart, ${shots.length} field-goal attempts">${court}${hexes}</svg>`;
 }
-const shotLegend = n => `<div class="legend"><span>${n} FGA charted</span>
-  <span class="sw">Frequency&nbsp;${[3, 4, 5, 6.5, 8].map(d => `<b class="fq" style="width:${d}px;height:${d}px"></b>`).join("")}</span>
-  <span class="sw">Points per shot&nbsp;<em>low</em>${POT.map(c => `<b class="pt" style="background:${c}"></b>`).join("")}<em>high</em></span></div>`;
 
 /* ---- cards ---- */
 let filter = "all";
@@ -351,7 +345,7 @@ function card(p) {
           <div><b>${fmt(s.ts)}</b><span>TS%</span></div>
         </div>
         ${lastLine(p)}
-        <div class="mini">${shots.length ? courtSVG(shots, { maxY: 27 }) : `<div class="nodata">No shot locations for this season.</div>`}</div>
+        <div class="mini">${shots.length ? courtSVG(shots, { r: 1.7, maxY: 27 }) : `<div class="nodata">No shot locations for this season.</div>`}</div>
 `
       : `<div class="nodata">${esc(p.note || "Not covered by NCAA or WNBA data.")}</div>`}
     </div>
@@ -444,8 +438,9 @@ function openPlayer(p, skey) {
       <div class="two">
         <section>
           <h3>Shot chart · ${s.label} ${s.league}</h3>
-          ${shots.length ? courtSVG(shots, { maxY: 30, interactive: true }) : `<p class="note">No shot locations recorded for this season.</p>`}
-          ${shots.length ? shotLegend(shots.length) : ""}
+          ${shots.length ? courtSVG(shots, { r: 1.25, maxY: 30, interactive: true }) : `<p class="note">No shot locations recorded for this season.</p>`}
+          ${shots.length ? `<div class="legend"><span>${shots.length} FGA charted. Bigger hex = more attempts.</span>
+            <span class="sw">FG%&nbsp;${FG_STEPS.map(([a, b, v]) => `<i style="background:var(${v})" title="${a}-${Math.min(b, 100)}%"></i>`).join("")}</span><span>&lt;30% → 60%+</span></div>` : ""}
         </section>
         <section>
           <h3>Points by game · ${s.label} ${s.league}</h3>
