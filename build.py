@@ -71,6 +71,7 @@ def load():
 
 
 _img_cache = {}
+PHOTO_W, LOGO_W = 800, 160  # px; cards show headshots ~300px wide, so this stays sharp on retina/phone screens
 
 
 def data_uri(url, width):
@@ -86,7 +87,7 @@ def data_uri(url, width):
             im = Image.open(io.BytesIO(r.content)).convert("RGBA")
             im.thumbnail((width, width * 2))
             buf = io.BytesIO()
-            im.save(buf, "WEBP", quality=82)
+            im.save(buf, "WEBP", quality=88)
             out = "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
     except Exception as e:  # noqa: BLE001 - a missing photo just falls back to initials
         print("  image failed:", url, e)
@@ -98,7 +99,7 @@ def local_uri(path, width):
     im = Image.open(path).convert("RGBA")
     im.thumbnail((width, width * 2))
     buf = io.BytesIO()
-    im.save(buf, "WEBP", quality=82)
+    im.save(buf, "WEBP", quality=88)
     return "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
@@ -167,7 +168,7 @@ def build_player(p, box, shots, data_date, logos):
     return {
         **base, "covered": True, "espn_id": int(p["espn_id"]),
         "jersey": str(last.athlete_jersey or ""), "pos": last.athlete_position_abbreviation or "",
-        "photo": data_uri(last.athlete_headshot_href, 360),
+        "photo": data_uri(last.athlete_headshot_href, PHOTO_W),
         "team": last.team_location, "team_full": last.team_display_name,
         "team_color": "#" + (last.team_color or "666666"), "league": last.league,
         "last_game": str(last.game_date), "last_espn": str(last.game_date), "days_since": days_since,
@@ -340,14 +341,14 @@ def main():
         local = next(iter(sorted((ROOT / "data" / "photos").glob(slug + ".*"))), None) \
             if (ROOT / "data" / "photos").exists() else None
         if local:
-            pl["photo"] = local_uri(local, 360)
-        elif p.get("fiba_photo") and (fp := data_uri(FIBA_HEADSHOT.format(**p["fiba_photo"]), 360)):
+            pl["photo"] = local_uri(local, PHOTO_W)
+        elif p.get("fiba_photo") and (fp := data_uri(FIBA_HEADSHOT.format(**p["fiba_photo"]), PHOTO_W)):
             pl["photo"] = fp  # Canada national-team headshot from the latest FIBA event
         elif p.get("photo_espn_id"):
             pl["photo"] = data_uri("https://a.espncdn.com/i/headshots/womens-college-basketball/players/full/"
-                                   f"{p['photo_espn_id']}.png", 360)
+                                   f"{p['photo_espn_id']}.png", PHOTO_W)
     logos.update(LOGOS)
-    logo_uris = {u: (local_uri(Path(u[6:]), 96) if u.startswith("local:") else data_uri(u, 96)) for u in logos}
+    logo_uris = {u: (local_uri(Path(u[6:]), LOGO_W) if u.startswith("local:") else data_uri(u, LOGO_W)) for u in logos}
     for pl in players:
         for s in pl.get("seasons", []):
             s["logo"] = logo_uris.get(s["logo"]) if s["logo"] else None
