@@ -18,7 +18,7 @@
   --red: #d80621; --red-ink: #c00a22; --panel: #d0102e; --panel-deep: #7a0814; --on-panel: #ffffff;
   --on-red: #1b1517; --on-red-soft: #6c6064; --glass: #ffffff; --glass-line: #e4dcdd;
   --good: #1f7a4d; --good-bg: #e3f3ea; --warn: #8a5a00; --warn-bg: #fbefd6; --none: #5f5659; --none-bg: #ece7e8;
-  --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
+  --h1: #1f4e9c; --h2: #8fb3e0; --h3: #f4b6c0; --h4: #dc3048; --h5: #85091e;
   --court: #d8cfd1; --bar: #d80621; --bar-dim: #e8b4bc;
   --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -30,19 +30,19 @@
 /* Player view: original palette, light and dark, unchanged by the page theme */
 dialog { --bg: #f4f1f1; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #e4dcdd;
   --red: #c8102e; --red-ink: #b00e28; --panel: #b30f2a; --panel-deep: #6e0a1b; --on-panel: #ffffff;
-  --h1: #f6cdd3; --h2: #ec97a3; --h3: #dc5a6c; --h4: #c8102e; --h5: #85091e;
+  --h1: #1f4e9c; --h2: #8fb3e0; --h3: #f4b6c0; --h4: #dc3048; --h5: #85091e;
   --court: #d8cfd1; --bar: #c8102e; --bar-dim: #e8b4bc; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) dialog {
   --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
   --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
   --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
-  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --h1: #3d6fc4; --h2: #23395f; --h3: #6b4950; --h4: #b8233b; --h5: #ff5a72;
   --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; } }
 :root[data-theme="dark"] dialog {
   --bg: #141012; --surface: #1e191b; --ink: #f3eeef; --muted: #a3979b; --line: #352c2f;
   --red: #ef4f64; --red-ink: #ff7385; --panel: #9e0d26; --panel-deep: #4a0712; --on-panel: #ffffff;
   --good: #6fd29e; --good-bg: #183326; --warn: #f0c060; --warn-bg: #3a2c10; --none: #b8adb0; --none-bg: #2c2527;
-  --h1: #6a3440; --h2: #8f3a4a; --h3: #b13f53; --h4: #e2566b; --h5: #ff98a6;
+  --h1: #3d6fc4; --h2: #23395f; --h3: #6b4950; --h4: #b8233b; --h5: #ff5a72;
   --court: #3e3437; --bar: #ef4f64; --bar-dim: #5e2a33; color-scheme: dark; }
 
 * { box-sizing: border-box; }
@@ -259,8 +259,18 @@ function seasonLabel(key) { const [lg, y] = key.split("-"); return lg === "NCAA"
 const P = DATA.players.map(p => ({ ...p, slug: slug(p.name), st: status(p) }));
 
 /* ---- shot chart (hexbin on half court; feet, rim at 0,0) ---- */
-const FG_STEPS = [[0, 30, "--h1"], [30, 40, "--h2"], [40, 50, "--h3"], [50, 60, "--h4"], [60, 101, "--h5"]];
-const fgVar = pct => FG_STEPS.find(([a, b]) => pct >= a && pct < b)[2];
+/* Colour = FG% compared with the typical FG% for those shot spots (women's pro/college averages):
+   at the rim 58%, rest of the paint 40%, midrange 38%, threes 33%. Pink = within 5 points of average. */
+const FG_STEPS = [[-101, -15, "--h1"], [-15, -5, "--h2"], [-5, 5, "--h3"], [5, 15, "--h4"], [15, 101, "--h5"]];
+const fgVar = diff => FG_STEPS.find(([a, b]) => diff >= a && diff < b)[2];
+const AVG_CORNER_Y = Math.sqrt(22.15 ** 2 - 22 ** 2);
+function avgFG(x, y) {
+  const d = Math.hypot(x - 25, y);
+  if ((Math.abs(x - 25) >= 22 && y <= AVG_CORNER_Y) || d > 22.15) return 33;
+  if (d < 4) return 58;
+  if (Math.abs(x - 25) <= 8 && y <= 13.75) return 40;
+  return 38;
+}
 function courtSVG(shots, { r = 1.5, maxY = 30, interactive = false } = {}) {
   const top = -5.25, W = 50, H = maxY - top;
   const bins = new Map(), w = Math.sqrt(3) * r, h = 1.5 * r;
@@ -274,16 +284,16 @@ function courtSVG(shots, { r = 1.5, maxY = 30, interactive = false } = {}) {
       for (const dc of [-1, 0, 1]) { const cc = Math.round((x - o) / w) + dc, cx = cc * w + o, cy = rr * h + top;
         const dd = (x - cx) ** 2 + (y - cy) ** 2; if (dd < bd) { bd = dd; best = [rr, cc, cx, cy]; } } }
     const k = best[0] + ":" + best[1];
-    const b = bins.get(k) || { cx: best[2], cy: best[3], n: 0, m: 0 };
-    b.n++; b.m += m; bins.set(k, b);
+    const b = bins.get(k) || { cx: best[2], cy: best[3], n: 0, m: 0, e: 0 };
+    b.n++; b.m += m; b.e += avgFG(x, y); bins.set(k, b);
   }
   const max = Math.max(1, ...[...bins.values()].map(b => b.n));
   const hexPath = (cx, cy, s) => { let d = ""; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30);
       d += (i ? "L" : "M") + (cx + s * Math.cos(a)).toFixed(2) + "," + (cy + s * Math.sin(a)).toFixed(2); } return d + "Z"; };
   let hexes = "";
   for (const b of [...bins.values()].sort((a, c) => a.n - c.n)) {
-    const s = r * (0.35 + 0.65 * Math.sqrt(b.n / max)), pct = 100 * b.m / b.n;
-    hexes += `<path class="hex" d="${hexPath(b.cx, b.cy, s)}" style="fill:var(${fgVar(pct)})"${interactive ? ` data-tip="${b.n} FGA · ${b.m} made · ${pct.toFixed(0)}%"` : ""}/>`;
+    const s = r * (0.35 + 0.65 * Math.sqrt(b.n / max)), pct = 100 * b.m / b.n, avg = b.e / b.n;
+    hexes += `<path class="hex" d="${hexPath(b.cx, b.cy, s)}" style="fill:var(${fgVar(pct - avg)})"${interactive ? ` data-tip="${b.n} FGA · ${b.m} made · ${pct.toFixed(0)}% (average here ${avg.toFixed(0)}%)"` : ""}/>`;
   }
   const yb = top, ftY = 19 + top, cornerY = Math.sqrt(22.15 ** 2 - 22 ** 2);
   const court = `<g class="court">
@@ -440,7 +450,7 @@ function openPlayer(p, skey) {
           <h3>Shot chart · ${s.label} ${s.league}</h3>
           ${shots.length ? courtSVG(shots, { r: 1.25, maxY: 30, interactive: true }) : `<p class="note">No shot locations recorded for this season.</p>`}
           ${shots.length ? `<div class="legend"><span>${shots.length} FGA charted. Bigger hex = more attempts.</span>
-            <span class="sw">FG%&nbsp;${FG_STEPS.map(([a, b, v]) => `<i style="background:var(${v})" title="${a}-${Math.min(b, 100)}%"></i>`).join("")}</span><span>&lt;30% → 60%+</span></div>` : ""}
+            <span class="sw">FG% vs average&nbsp;${FG_STEPS.map(([a, b, v]) => `<i style="background:var(${v})"></i>`).join("")}</span><span>15+ below → 15+ above</span></div>` : ""}
         </section>
         <section>
           <h3>Points by game · ${s.label} ${s.league}</h3>
