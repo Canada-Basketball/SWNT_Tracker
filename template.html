@@ -144,22 +144,19 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 /* ring view: one player at a time on a rotating ring (toggle Grid / Ring) */
 .view { margin-left: 4px; }
 .ring { position: relative; user-select: none; -webkit-user-select: none; }
-.ring .stage { position: relative; height: clamp(380px, 58vh, 600px); overflow: hidden; touch-action: pan-y; cursor: grab; border-radius: 18px;
-  background: radial-gradient(ellipse 70% 38% at 50% 74%, #e4dfe0 0%, #f1eeee 55%, #f7f6f6 100%); }
-.ring .stage::before { content: ""; position: absolute; left: 50%; top: 66%; width: 82%; height: 26%; transform: translate(-50%, -50%);
-  border: 1px dashed rgba(27,21,23,.16); border-radius: 50%; pointer-events: none; }
+.ring .stage { position: relative; height: clamp(380px, 58vh, 600px); overflow: hidden; touch-action: pan-y; cursor: grab; background: transparent; }
 .ring .stage.drag { cursor: grabbing; }
 .ring .ri { position: absolute; left: 50%; top: 57%; width: clamp(260px, 34vw, 500px); padding: 0; border: 0; background: none; cursor: pointer; will-change: transform, filter; }
 .ring .ri img { display: block; width: 100%; height: auto; pointer-events: none;
-  filter: drop-shadow(0 14px 18px rgba(40,10,14,.28));
-  -webkit-mask-image: linear-gradient(#000 78%, transparent 99%); mask-image: linear-gradient(#000 78%, transparent 99%); }
-.ring .ri::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: -5%; height: 9%; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(40,10,14,.32), transparent); z-index: -1; }
+  filter: drop-shadow(0 6px 10px rgba(40,10,14,.12));
+  -webkit-mask-image: linear-gradient(#000 93%, transparent 100%); mask-image: linear-gradient(#000 93%, transparent 100%); }
+.ring .ri::after { content: ""; position: absolute; left: 26%; right: 26%; bottom: -4%; height: 7%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(40,10,14,.08), transparent); z-index: -1; }
 .ring .ri .init { aspect-ratio: 600 / 436; display: grid; place-items: center; font: 800 72px var(--display); color: #ba0c2f; }
 .ring .nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 200; width: 44px; height: 44px; border-radius: 50%; border: 1px dashed #b9aeb0;
   background: rgba(255,255,255,.9); color: #1b1517; font: 600 18px var(--body); cursor: pointer; }
 .ring .nav.prev { left: 0; } .ring .nav.next { right: 0; }
-.ring .info { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px 24px; align-items: end; padding-top: 18px; border-top: 1px solid var(--glass-line); }
+.ring .info { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px 24px; align-items: end; padding-top: 8px; }
 .ring .ct2 { font: 500 12px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 10px; }
 .ring .pause { width: 26px; height: 26px; border-radius: 50%; border: 1px dashed #b9aeb0; background: #fff; cursor: pointer; font: 600 10px var(--body); color: #1b1517; }
 .ring .rname { font: 800 clamp(36px, 5.5vw, 64px)/.9 var(--display); text-transform: uppercase; margin: 6px 0 4px; }
@@ -170,7 +167,11 @@ dialog .chip .ct { color: var(--muted); opacity: 1; }
 .ring .rstats span { font: 500 10.5px var(--mono); letter-spacing: .08em; color: var(--muted); }
 .ring .open { display: flex; align-items: center; gap: 12px; font: 600 12.5px var(--body); letter-spacing: .06em; text-transform: uppercase; background: none; border: 0; cursor: pointer; color: #1b1517; }
 .ring .open i { width: 56px; height: 56px; border-radius: 50%; background: #ba0c2f; color: #fff; display: grid; place-items: center; font: 400 30px/1 var(--body); font-style: normal; }
-@media (max-width: 780px) { .ring .info { grid-template-columns: minmax(0, 1fr) auto; } .ring .rstats { grid-column: 1 / -1; order: 3; } .ring .ri { width: 62vw; } }
+@media (max-width: 780px) {
+  .ring .stage { width: 100vw; margin-left: calc(50% - 50vw); height: 92vw; max-height: 62vh; }  /* edge to edge, like the inspiration */
+  .ring .ri { width: 104vw; top: 52%; }
+  .ring .nav { display: none; }  /* swipe instead */
+  .ring .info { grid-template-columns: minmax(0, 1fr) auto; } .ring .rstats { grid-column: 1 / -1; order: 3; } }
 
 /* dialog */
 dialog { width: min(1040px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); overflow: auto; }
@@ -433,7 +434,7 @@ function ringSet(list, empty) {
 }
 function ringDraw() {
   const n = RING.list.length, st = $("#stage"); if (!n) return;
-  const R = Math.min(st.clientWidth * 0.4, 640), slots = Math.max(Math.min(n, 8), 3), step = 2 * Math.PI / slots;
+  const R = Math.min(st.clientWidth * (st.clientWidth < 780 ? 0.55 : 0.4), 640), slots = Math.max(Math.min(n, 8), 3), step = 2 * Math.PI / slots;
   st.querySelectorAll(".ri").forEach(el => {
     const d = wrapD(+el.dataset.i - RING.pos, n), a = d * step, z = Math.cos(a), f = ((z + 1) / 2) ** 2;
     const vis = Math.abs(d) <= slots / 2 - 0.5 ? 1 : Math.max(0, slots / 2 - Math.abs(d));
@@ -475,7 +476,7 @@ function ringInfo() {
 function ringStop() { clearInterval(RING.timer); RING.timer = 0; }
 function ringAuto() {
   ringStop();
-  if (RING.playing && !reduceMotion && view === "ring" && RING.list.length > 1) RING.timer = setInterval(() => { if (!$("#dlg").open && !RING.drag) ringGo(1); }, 4500);
+  if (RING.playing && !reduceMotion && view === "ring" && RING.list.length > 1) RING.timer = setInterval(() => { if (!$("#dlg").open && !RING.drag) ringGo(1); }, 2000);
 }
 function setView(v) { view = v; render(); }
 $("#view").addEventListener("click", e => { const b = e.target.closest("[data-v]"); if (b) setView(b.dataset.v); });
