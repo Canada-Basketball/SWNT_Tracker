@@ -5,7 +5,7 @@ name: Daily refresh
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # 07:00 Toronto in winter (EST); 08:00 in summer
+    - cron: "0 8 * * *"    # 03:00 Toronto in winter (EST), 04:00 in summer; GitHub often starts it hours late
   workflow_dispatch:
 
 permissions:
