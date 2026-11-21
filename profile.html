@@ -91,6 +91,7 @@ td.l, th.l { text-align: left; }
 .tiles b { display: block; font: 800 26px/1.5 var(--display); }
 .tiles .ov { grid-column: 4; grid-row: 1 / span 2; border-left: 2px solid var(--ink); border-bottom: 0; display: flex; flex-direction: column; justify-content: center; }
 .tiles .ov b { font-size: 46px; line-height: 1.1; }
+.tiles .ov em { font-style: normal; font-size: 11px; line-height: 1.3; color: var(--muted); padding: 0 8px 8px; text-align: center; }
 
 .court line, .court path, .court rect, .court circle.ln { fill: none; stroke: var(--court); stroke-width: .22; }
 .hex { stroke: #fff; stroke-width: .18; }
@@ -210,11 +211,12 @@ function radarSVG(skills) {
 }
 function skillsPanel(prof) {
   if (!prof) return "";
-  const t = prof.skills;
-  return `<section class="panel"><h2>Skill profile <small>each skill = average percentile of its stats<br>dashed ring = league average</small></h2>
+  const t = prof.skills, vs = `vs ${prof.peers.toLocaleString()} ${prof.league} ${prof.group}`;
+  return `<section class="panel"><h2>Skill profile <small>${vs}<br>each skill = average percentile of its stats · dashed ring = group average</small></h2>
     <div class="radar">${radarSVG(t)}</div>
     <div class="tiles num">${t.map(([nm, v], i) => `<div style="grid-column:${i % 3 + 1};grid-row:${Math.floor(i / 3) + 1}"><span>${nm}</span><b style="background:${pVar(v)};color:${pInk(v)}">${v ?? "–"}</b></div>`).join("")}
-      <div class="ov"><span>Overall</span><b>${prof.overall ?? "–"}</b></div></div>
+      <div class="ov"><span>Overall</span><b>${prof.overall ?? "–"}</b><em>${esc(vs)}</em></div></div>
+    <p class="note" style="margin-top:10px">Scores rank her within this group only. A 60 in the WNBA and a 60 in the NCAA are not the same level; don't compare them across leagues.</p>
   </section>`;
 }
 function splits(p, s) {
@@ -281,7 +283,7 @@ function seasonHistory(p) {
     ${rows.map((x, i) => { const prev = rows[i + 1], dp = prev ? x.ppg - prev.ppg : null, ov = p.profile?.[x.key]?.overall;
       return `<tr><td class="l">${esc(x.label)} ${esc(SHORT[x.league] || x.league)}</td><td class="l">${esc(x.short || x.team)}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td><td><b>${fmt(x.ppg)}</b></td>
         <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td>
-        <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span>`}</td></tr>`; }).join("")}
+        <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span> <small style="color:var(--muted)">vs ${p.profile[x.key].league} ${p.profile[x.key].role === "G" ? "G/W" : "bigs"}</small>`}</td></tr>`; }).join("")}
   </table></div></section>`;
 }
 function similar(prof) {

@@ -1,6 +1,6 @@
 """Scouting-report numbers for NCAA and WNBA players: percentiles vs same-season peers, skill ratings and
-similar players. Peers = everyone in that league-season who played enough (see pool()), split into
-guards and forwards/centres. Overseas leagues have no league-wide data, so they get no percentiles.
+similar players. Peers = everyone in that league-season who played enough (see pool()), split by role:
+guards and wings (forwards who shoot threes and rarely crash the offensive glass) vs bigs. Overseas leagues have no league-wide data, so they get no percentiles.
 """
 import numpy as np
 import pandas as pd
@@ -68,8 +68,20 @@ def season_table(box):
     t["ftr"] = div(t.fta, t.fga)
     t["ato"] = div(t.ast, t.tov.clip(lower=1))
     t["tovp"] = 100 * div(t.tov, t.poss)
-    t["group"] = np.where(t.pos.fillna("G").str.contains("G"), "G", "F")
     return t
+
+
+WING_3PA40 = 4.0  # a forward is a wing with this many 3PA per 40 and below-median offensive rebounding for bigs
+
+
+def roles(t, peers):
+    """'G' (guards and wings) or 'F' (bigs) by how a player plays, not only the listed position:
+    ESPN lists stretch wings like Bridget Carleton as F, which would compare them with centres."""
+    pos = t.pos.fillna("G")
+    big = ~pos.str.contains("G")
+    oreb_med = peers[~peers.pos.fillna("G").str.contains("G")].oreb40.median()
+    wing = big & ~pos.str.contains("C") & (t.tpa40 >= WING_3PA40) & (t.oreb40 < oreb_med)
+    return np.where(big & ~wing, "F", "G")
 
 
 def pool(t, skey):
@@ -93,7 +105,9 @@ def profiles(box, ids):
     out = {}
     for skey in t.skey.unique():
         peers_all, need = pool(t, skey)
+        peers_all = peers_all.assign(group=roles(peers_all, peers_all))
         mine = t[(t.skey == skey) & t.athlete_id.isin(ids)]
+        mine = mine.assign(group=roles(mine, peers_all))
         for _, r in mine.iterrows():
             peers = peers_all[peers_all.group == r.group]
             # shooting % only counts peers with real attempts
@@ -121,7 +135,8 @@ def profiles(box, ids):
                                 "apg": round(float(q.apg), 1), "ts": None if pd.isna(q.ts) else round(float(q.ts), 1),
                                 "match": int(round(100 - float(d[i])))})
             out.setdefault(int(r.athlete_id), {})[skey] = {
-                "peers": int(len(peers)), "group": "guards" if r.group == "G" else "forwards and centres",
+                "peers": int(len(peers)), "league": skey.split("-")[0], "group": "guards and wings" if r.group == "G" else "bigs (forwards and centres)",
+                "role": "G" if r.group == "G" else "F",
                 "min_gp": need, "min_mpg": MIN_MPG, "qualified": bool(r.mpg >= MIN_MPG and r.gp >= need),
                 "metrics": [[k, label, None if pd.isna(r[k]) else fmt.format(r[k]), pcts[k]] for k, label, hi, fmt in METRICS],
                 "skills": skills, "overall": int(round(sum(ok) / len(ok))) if ok else None,
