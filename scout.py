@@ -254,6 +254,10 @@ def add_pbp(out, box, pbp):
             opp = {str(d): rk.get(int(o)) for d, o in zip(mine.game_date, mine.opponent_team_id)}
             known = [v for v in opp.values() if v]
             prof["opp_rank"] = opp
+            # plus-minus: ESPN has it for the WNBA only (not NCAA)
+            if "plus_minus" in mine:
+                pm = pd.to_numeric(mine.plus_minus, errors="coerce")
+                prof["pm"] = {str(d): int(v) for d, v in zip(mine.game_date, pm) if pd.notna(v)} or None
             prof["n_teams"] = len(rk)
             prof["top"] = 50 if skey.startswith("NCAA") else 5
             prof["avg_opp_rank"] = round(sum(known) / len(known)) if known else None

@@ -168,6 +168,8 @@ function summarize(games) {
   return { gp: n, mpg: sum("min") / n, ppg: sum("pts") / n, rpg: sum("reb") / n, apg: sum("ast") / n, spg: sum("stl") / n, bpg: sum("blk") / n,
     tpg: sum("tov") / n, fg: pct("fgm", "fga"), tp: pct("tpm", "tpa"), ft: pct("ftm", "fta"), ts: tsa ? 100 * sum("pts") / (2 * tsa) : null };
 }
+const pmAvg = (prof, gs) => { const v = gs.map(g => prof?.pm?.[g.d]).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+const pmFmt = v => v == null ? "–" : (v > 0 ? "+" : "") + fmt(v);
 const gamesFor = (p, s) => p.games.filter(g => g.s === s.key || (s.parts || []).includes(g.s));
 
 /* ---- sections ---- */
@@ -181,11 +183,12 @@ function hero(p, s) {
   </section>
   ${p.seasons.length > 1 ? `<div class="seasons" role="group" aria-label="Season">${p.seasons.map(x => `<button data-s="${esc(x.key)}" aria-pressed="${x.key === s.key}">${esc(x.label)} ${esc(SHORT[x.league] || x.league)} · ${esc(x.short || x.team)}</button>`).join("")}</div>` : ""}`;
 }
-function strip(s, prof) {
+function strip(s, prof, p) {
   const cells = [["GP", s.gp, 0], ["MPG", s.mpg], ["PTS", s.ppg], ["REB", s.rpg], ["AST", s.apg], ["STL", s.spg], ["BLK", s.bpg], ["TOV", s.tpg],
     ["FG%", s.fg], ["3P%", s.tp], ["FT%", s.ft], ["TS%", s.ts]];
   if (prof && prof.usg != null) cells.push(["USG%", prof.usg]);
-  return `<div class="scroll strip"><table class="num"><tr>${cells.map(c => `<th>${c[0]}</th>`).join("")}</tr><tr>${cells.map(c => `<td>${fmt(c[1], c[2] ?? 1)}</td>`).join("")}</tr></table></div>`;
+  const pm = prof?.pm ? pmAvg(prof, gamesFor(p, s)) : null;
+  return `<div class="scroll strip"><table class="num"><tr>${cells.map(c => `<th>${c[0]}</th>`).join("")}${pm != null ? "<th>+/-</th>" : ""}</tr><tr>${cells.map(c => `<td>${fmt(c[1], c[2] ?? 1)}</td>`).join("")}${pm != null ? `<td>${pmFmt(pm)}</td>` : ""}</tr></table></div>`;
 }
 function percentiles(p, s, prof) {
   if (!prof) {
@@ -251,14 +254,14 @@ function splits(p, s, prof) {
     ["Started", gs.filter(g => g.st === true)], ["Off bench", gs.filter(g => g.st === false)], ["Last 5", gs.slice(0, 5)],
     ...(prof?.opp_rank ? [[`vs top ${prof.top}`, gs.filter(g => (prof.opp_rank[g.d] ?? 999) <= prof.top)],
       [`vs the rest`, gs.filter(g => (prof.opp_rank[g.d] ?? 999) > prof.top)]] : [])]
-    .map(([k, g]) => [k, summarize(g)]).filter(([, x]) => x);
+    .map(([k, g]) => [k, g.length ? { ...summarize(g), pm: pmAvg(prof, g) } : null]).filter(([, x]) => x);
   const base = rows[0][1];
   const d = (v, b, hi = true) => v == null || b == null ? "" : (() => { const x = (v - b) * (hi ? 1 : -1); return x >= 1.5 ? "background:#f6d3d9" : x <= -1.5 ? "background:#d9e4f3" : ""; })();
   return `<section class="panel"><h2>Splits <small>shaded = clearly better (red) or worse (blue) than her season</small></h2><div class="scroll"><table class="num">
-    <tr><th class="l">Split</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>TOV</th><th>FG%</th><th>3P%</th><th>TS%</th></tr>
+    <tr><th class="l">Split</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>TOV</th><th>FG%</th><th>3P%</th><th>TS%</th>${prof?.pm ? "<th>+/-</th>" : ""}</tr>
     ${rows.map(([k, x], i) => `<tr${i ? "" : ' style="font-weight:600"'}><td class="l">${k}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td>
       <td style="${i ? d(x.ppg, base.ppg) : ""}">${fmt(x.ppg)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td style="${i ? d(x.tpg, base.tpg, false) : ""}">${fmt(x.tpg)}</td>
-      <td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td style="${i ? d(x.ts / 2.5, base.ts / 2.5) : ""}">${fmt(x.ts)}</td></tr>`).join("")}
+      <td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td style="${i ? d(x.ts / 2.5, base.ts / 2.5) : ""}">${fmt(x.ts)}</td>${prof?.pm ? `<td style="${i ? d(x.pm / 2, base.pm / 2) : ""}">${pmFmt(x.pm)}</td>` : ""}</tr>`).join("")}
   </table></div></section>`;
 }
 const ZONES = [["At the rim", 58], ["Paint (non-rim)", 40], ["Midrange", 38], ["Corner 3", 33], ["Above-break 3", 33]];
@@ -306,10 +309,10 @@ function trend(p, s) {
 function seasonHistory(p) {
   const rows = p.seasons.filter(x => !x.parts || x.key.startsWith("All club"));
   return `<section class="panel"><h2>Season history</h2><div class="scroll"><table class="num">
-    <tr><th class="l">Season</th><th class="l">Team</th><th>GP</th><th>PTS</th><th>+/-</th><th>REB</th><th>AST</th><th>3P%</th><th>TS%</th><th>OVR</th></tr>
+    <tr><th class="l">Season</th><th class="l">Team</th><th>GP</th><th>PTS</th><th title="change in points per game from the season before">ΔPTS</th><th>REB</th><th>AST</th><th>3P%</th><th>TS%</th><th>+/-</th><th>OVR</th></tr>
     ${rows.map((x, i) => { const prev = rows[i + 1], dp = prev ? x.ppg - prev.ppg : null, ov = p.profile?.[x.key]?.overall;
       return `<tr><td class="l">${esc(x.label)} ${esc(SHORT[x.league] || x.league)}</td><td class="l">${esc(x.short || x.team)}</td><td>${x.gp}</td><td><b>${fmt(x.ppg)}</b></td>
-        <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td>
+        <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td><td>${p.profile?.[x.key]?.pm ? pmFmt(pmAvg(p.profile[x.key], gamesFor(p, x))) : "–"}</td>
         <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span>`}</td></tr>`; }).join("")}
   </table></div></section>`;
 }
@@ -324,7 +327,7 @@ function similar(prof) {
 function show(p, key) {
   cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
   const prof = p.profile?.[s.key];
-  $("#app").innerHTML = hero(p, s) + strip(s, prof) +
+  $("#app").innerHTML = hero(p, s) + strip(s, prof, p) +
     `<div class="dash">${(prof ? [percentiles(p, s, prof) + quarters(prof), skillsPanel(prof) + splits(p, s, prof) + seasonHistory(p), shotsPanel(p, s) + trend(p, s) + similar(prof)]
       : [percentiles(p, s, prof) + trend(p, s), shotsPanel(p, s), splits(p, s) + seasonHistory(p)]).map(c => `<div class="col">${c}</div>`).join("")}</div>`;
   $("#pick").value = p.slug;
