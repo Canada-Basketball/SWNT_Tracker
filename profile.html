@@ -223,20 +223,45 @@ function skillsPanel(prof) {
     <p class="note" style="margin-top:10px">Scores rank her within this group only. A 60 in the WNBA and a 60 in the NCAA are not the same level; don't compare them across leagues.</p>
   </section>`;
 }
-function splits(p, s) {
+function creation(prof) {
+  if (!prof?.creation) return "";
+  const c = prof.counts;
+  return `<section class="panel"><h2>Shot creation &amp; fouls drawn <small>vs ${prof.peers.toLocaleString()} ${prof.league} ${prof.group}<br>from ESPN play-by-play</small></h2>
+    ${prof.creation.map(([k, label, v, pc]) => `<div class="pbar${pc == null ? " na" : ""}"><span class="lb">${label}</span>
+      <span class="tr"><i style="width:${pc ?? 0}%;background:${pVar(pc)}"></i></span><span class="pc num">${pc ?? "–"}</span><span class="v num">${v ?? "–"}</span></div>`).join("")}
+    <p class="note" style="margin-top:10px">${c.fgm} made field goals: ${c.ast_fgm} assisted, ${c.fgm - c.ast_fgm} self-created (no assist credited). ${c.and1} and-one${c.and1 === 1 ? "" : "s"}, ${c.trips} trips to the line.
+      Higher percentile = creates more of her own offence; it's a style marker, not good or bad on its own.</p></section>`;
+}
+function quarters(prof) {
+  if (!prof?.quarters || !Object.keys(prof.quarters).length) return "";
+  const pct = (m, a) => a ? fmt(100 * m / a) : "–";
+  const row = (k, x, extra = "") => `<tr${extra}><td class="l">${k}</td><td><b>${x[0]}</b></td><td>${x[1]}-${x[2]}</td><td>${pct(x[1], x[2])}</td><td>${x[3]}-${x[4]}</td></tr>`;
+  const qs = Object.entries(prof.quarters).map(([q, x]) => row(+q === 5 ? "OT" : "Q" + q, x)).join("");
+  const cl = prof.clutch;
+  return `<section class="panel"><h2>By quarter &amp; clutch <small>season totals<br>clutch = Q4/OT, last 5:00, score within 5</small></h2><div class="scroll"><table class="num">
+    <tr><th class="l">Period</th><th>PTS</th><th>FG</th><th>FG%</th><th>FT</th></tr>${qs}
+    ${cl ? row(`Clutch <small style="color:var(--muted)">(${cl[5]} game${cl[5] === 1 ? "" : "s"})</small>`, cl, ' style="border-top:2px solid var(--ink)"')
+      : `<tr style="border-top:2px solid var(--ink)"><td class="l">Clutch</td><td colspan="4" style="text-align:left;color:var(--muted)">no clutch possessions yet</td></tr>`}
+  </table></div></section>`;
+}
+function splits(p, s, prof) {
   const gs = gamesFor(p, s);
   const rows = [["Season", gs], ["Home", gs.filter(g => g.ha === "vs")], ["Away", gs.filter(g => g.ha === "@")],
     ["Wins", gs.filter(g => g.wl === "W")], ["Losses", gs.filter(g => g.wl === "L")],
-    ["Started", gs.filter(g => g.st === true)], ["Off bench", gs.filter(g => g.st === false)], ["Last 5", gs.slice(0, 5)]]
+    ["Started", gs.filter(g => g.st === true)], ["Off bench", gs.filter(g => g.st === false)], ["Last 5", gs.slice(0, 5)],
+    ...(prof?.opp_rank ? [[`vs top ${prof.top}`, gs.filter(g => (prof.opp_rank[g.d] ?? 999) <= prof.top)],
+      [`vs the rest`, gs.filter(g => (prof.opp_rank[g.d] ?? 999) > prof.top)]] : [])]
     .map(([k, g]) => [k, summarize(g)]).filter(([, x]) => x);
   const base = rows[0][1];
   const d = (v, b, hi = true) => v == null || b == null ? "" : (() => { const x = (v - b) * (hi ? 1 : -1); return x >= 1.5 ? "background:#f6d3d9" : x <= -1.5 ? "background:#d9e4f3" : ""; })();
+  const sos = prof?.avg_opp_rank ? `<p class="note" style="margin-top:10px">Schedule: average opponent ranks <b>${prof.avg_opp_rank}</b> of ${prof.n_teams} ${prof.league} teams
+    (team ratings from this season's scores, adjusted for home court). Top ${prof.top} = ranked ${prof.top} or better.</p>` : "";
   return `<section class="panel"><h2>Splits <small>shaded = clearly better (red) or worse (blue) than her season</small></h2><div class="scroll"><table class="num">
     <tr><th class="l">Split</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>TOV</th><th>FG%</th><th>3P%</th><th>TS%</th></tr>
     ${rows.map(([k, x], i) => `<tr${i ? "" : ' style="font-weight:600"'}><td class="l">${k}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td>
       <td style="${i ? d(x.ppg, base.ppg) : ""}">${fmt(x.ppg)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td style="${i ? d(x.tpg, base.tpg, false) : ""}">${fmt(x.tpg)}</td>
       <td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td style="${i ? d(x.ts / 2.5, base.ts / 2.5) : ""}">${fmt(x.ts)}</td></tr>`).join("")}
-  </table></div></section>`;
+  </table></div>${sos}</section>`;
 }
 const ZONES = [["At the rim", 58], ["Paint (non-rim)", 40], ["Midrange", 38], ["Corner 3", 33], ["Above-break 3", 33]];
 function zoneOf(x, y) {
@@ -302,7 +327,7 @@ function show(p, key) {
   cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
   const prof = p.profile?.[s.key];
   $("#app").innerHTML = hero(p, s) + strip(s, prof) +
-    `<div class="dash">${prof ? percentiles(p, s, prof) + skillsPanel(prof) + shotsPanel(p, s) + splits(p, s) + trend(p, s) + similar(prof)
+    `<div class="dash">${prof ? percentiles(p, s, prof) + skillsPanel(prof) + shotsPanel(p, s) + creation(prof) + quarters(prof) + splits(p, s, prof) + trend(p, s) + similar(prof)
       : percentiles(p, s, prof) + shotsPanel(p, s) + splits(p, s) + trend(p, s)}<div class="full">${seasonHistory(p)}</div></div>`;
   $("#pick").value = p.slug;
   $("#src").textContent = "Data: " + (p.sources || []).join(", ") + (prof ? " · percentiles from every " + (s.league === "NCAA" ? "NCAA" : "WNBA") + " box score this season" : "");

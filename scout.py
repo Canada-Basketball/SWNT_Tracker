@@ -144,3 +144,117 @@ def profiles(box, ids):
                 "similar": sim,
             }
     return out
+
+
+# ---------------------------------------------------------------- play-by-play (ESPN shot events, incl. free throws)
+def team_ratings(box):
+    """{skey: {team_id: rank}} from game scores: least-squares margin ratings with home court, lightly shrunk
+    to 0 so teams with few games don't jump to the top. Only teams with 3+ games are ranked."""
+    out = {}
+    tg = box.drop_duplicates(["skey", "game_id", "team_id"])
+    for skey, g in tg.groupby("skey"):
+        g = g.dropna(subset=["team_score", "opponent_team_score"])
+        n_games = g.team_id.value_counts()
+        teams = sorted(set(g.team_id) | set(g.opponent_team_id))
+        ix = {t: i for i, t in enumerate(teams)}
+        X = np.zeros((len(g), len(teams) + 1))
+        X[np.arange(len(g)), g.team_id.map(ix)] = 1
+        X[np.arange(len(g)), g.opponent_team_id.map(ix)] = -1
+        X[:, -1] = np.where(g.home_away == "home", 1, -1)
+        y = (g.team_score.astype(float) - g.opponent_team_score.astype(float)).to_numpy()
+        lam = 2.0
+        r = np.linalg.solve(X.T @ X + lam * np.eye(X.shape[1]), X.T @ y)[:-1]
+        rated = sorted((t for t in teams if n_games.get(t, 0) >= 3), key=lambda t: -r[ix[t]])
+        out[skey] = {int(t): i + 1 for i, t in enumerate(rated)}
+    return out
+
+
+def _secs(c):
+    m, _, s = str(c).rpartition(":")
+    try:
+        return (int(m) if m else 0) * 60 + float(s)
+    except ValueError:
+        return None
+
+
+def pbp_table(pbp):
+    """Per player-season: self-created makes, and-ones, FT trips, by-quarter and clutch scoring.
+    Clutch = 4th quarter or OT, last 5:00, score within 5 before the shot."""
+    p = pbp.copy().reset_index(drop=True)
+    p["is_ft"] = p.type_text.str.contains("Free ?Throw", regex=True)
+    p["tech"] = p.type_text.str.contains("Technical|Flagrant|Clear Path")
+    p["made"] = p.scoring_play.fillna(False).astype(bool)
+    p["pts"] = p.score_value.fillna(0).astype(int) * p.made
+    p["tp"] = ~p.is_ft & (p.score_value == 3)
+    # score margin (shooter's team minus opponent) before each event
+    p["seq"] = np.arange(len(p))
+    p["team_pts_before"] = p.groupby(["game_id", "team_id"]).pts.cumsum() - p.pts
+    p["game_pts_before"] = p.groupby("game_id").pts.cumsum() - p.pts
+    p["margin"] = 2 * p.team_pts_before - p.game_pts_before
+    p["left"] = p.clock_display_value.map(_secs)
+    p["clutch"] = (p.period_number >= 4) & (p.left <= 300) & (p.margin.abs() <= 5)
+    p["q"] = p.period_number.clip(upper=5)
+    # free-throw trips and and-ones: free throws by the same player at the same moment
+    ft = p[p.is_ft & ~p.tech]
+    trips = ft.groupby(["skey", "game_id", "period_number", "clock_display_value", "athlete_id_1"]).size().rename("n_ft")
+    fg = p[~p.is_ft]
+    made = fg[fg.made].join(trips, on=["skey", "game_id", "period_number", "clock_display_value", "athlete_id_1"])
+    made["and1"] = made.n_ft.eq(1)
+    k = ["skey", "athlete_id_1"]
+    t = pd.DataFrame({
+        "p_fgm": fg.groupby(k).made.sum(), "p_fga": fg.groupby(k).size(),
+        "ast_fgm": made.groupby(k).athlete_id_2.apply(lambda s: s.notna().sum()),
+        "and1": made.groupby(k).and1.sum(),
+        "trips": trips.reset_index().groupby(k).size(),
+    }).fillna(0)
+    t["self_fgm"] = t.p_fgm - t.ast_fgm
+    t["self_pct"] = 100 * t.self_fgm / t.p_fgm.where(t.p_fgm > 0)
+    # quarters and clutch: [pts, fgm, fga, ftm, fta]
+    def agg(d):
+        f, fr = d[~d.is_ft], d[d.is_ft]
+        return [int(d.pts.sum()), int(f.made.sum()), len(f), int(fr.made.sum()), len(fr)]
+    quarters = {key: {int(q): agg(d) for q, d in g.groupby("q")} for key, g in p.groupby(k)}
+    clutch = {key: agg(g) + [int(g.game_id.nunique())] for key, g in p[p.clutch].groupby(k)}
+    return t.reset_index().rename(columns={"athlete_id_1": "athlete_id"}), quarters, clutch
+
+
+PBP_METRICS = [("self_pct", "Self-created makes %", "{:.0f}"), ("self40", "Self-created makes / 40", "{:.1f}"),
+               ("and140", "And-ones / 40", "{:.2f}"), ("trips40", "FT trips / 40", "{:.1f}")]
+
+
+def add_pbp(out, box, pbp):
+    """Adds creation, quarter, clutch and schedule data to the profiles built by profiles()."""
+    t = season_table(box)
+    pt, quarters, clutch = pbp_table(pbp)
+    t = t.merge(pt, on=["skey", "athlete_id"], how="left")
+    m = t["min"].where(t["min"] > 0)
+    t["self40"], t["and140"], t["trips40"] = 40 * t.self_fgm / m, 40 * t.and1 / m, 40 * t.trips / m
+    ranks = team_ratings(box)
+    games = box.drop_duplicates(["skey", "athlete_id", "game_id"])
+    for aid, seasons in out.items():
+        for skey, prof in seasons.items():
+            peers_all, _ = pool(t, skey)
+            peers_all = peers_all.assign(group=roles(peers_all, peers_all))
+            peers = peers_all[peers_all.group == prof["role"]]
+            r = t[(t.skey == skey) & (t.athlete_id == aid)]
+            if r.empty or pd.isna(r.iloc[0].p_fga):
+                continue
+            r = r.iloc[0]
+            crt = []
+            for k, label, fmt in PBP_METRICS:
+                ser = peers[k][peers.p_fgm >= 1.0 * peers.gp] if k == "self_pct" else peers[k]
+                crt.append([k, label, None if pd.isna(r[k]) else fmt.format(r[k]), pct_rank(ser, r[k], True)])
+            prof["creation"] = crt
+            prof["counts"] = {"fgm": int(r.p_fgm), "ast_fgm": int(r.ast_fgm), "and1": int(r.and1), "trips": int(r.trips)}
+            prof["quarters"] = quarters.get((skey, aid), {})
+            prof["clutch"] = clutch.get((skey, aid))
+            # schedule: opponent rank for each game, keyed by date
+            rk = ranks.get(skey, {})
+            mine = games[(games.skey == skey) & (games.athlete_id == aid)]
+            opp = {str(d): rk.get(int(o)) for d, o in zip(mine.game_date, mine.opponent_team_id)}
+            known = [v for v in opp.values() if v]
+            prof["opp_rank"] = opp
+            prof["n_teams"] = len(rk)
+            prof["top"] = 50 if skey.startswith("NCAA") else 5
+            prof["avg_opp_rank"] = round(sum(known) / len(known)) if known else None
+    return out

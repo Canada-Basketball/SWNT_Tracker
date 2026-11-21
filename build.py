@@ -350,6 +350,10 @@ def main():
                                    f"{p['photo_espn_id']}.png", PHOTO_W)
     # scouting-report numbers (percentiles vs league peers, skills, similar players) for NCAA/WNBA seasons
     prof = scout.profiles(box, [p["espn_id"] for p in roster if p.get("espn_id")])
+    # play-by-play: ESPN's shot events incl. free throws (unfiltered), for creation, quarters, clutch and schedule
+    pbp = pd.concat([pd.read_parquet(RAW / f"{lg.lower()}_shots_{yr}.parquet").assign(skey=f"{lg}-{yr}")
+                     for lg, yr, _ in SOURCES], ignore_index=True)
+    scout.add_pbp(prof, box, pbp)
     for pl in players:
         if pl.get("espn_id"):
             pl["profile"] = prof.get(pl["espn_id"], {})
