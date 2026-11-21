@@ -26,7 +26,7 @@ html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--body); }
 .num { font-variant-numeric: tabular-nums; }
 a { color: var(--red); }
-.wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(16px, 3vw) 48px; }
+.wrap { max-width: 1840px; margin: 0 auto; padding: 0 max(16px, 3vw) 48px; }
 
 /* top bar */
 .bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 14px 0; }
@@ -67,6 +67,9 @@ td.l, th.l { text-align: left; }
 .strip td { font: 700 24px/1.1 var(--display); padding: 10px 8px; border: 1px solid var(--line); }
 
 /* panels */
+.dash { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 36px; margin-top: 24px; align-items: start; }
+.dash > .full { grid-column: 1 / -1; }
+@media (max-width: 1400px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 40px; margin-top: 30px; }
 .panel h2 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font: 800 22px/1 var(--display); text-transform: uppercase;
   letter-spacing: .03em; margin: 0 0 14px; padding-left: 12px; border-left: 4px solid var(--head); }
@@ -74,7 +77,7 @@ td.l, th.l { text-align: left; }
 .note { font-size: 13px; color: var(--muted); background: var(--soft); border-radius: 10px; padding: 14px 16px; }
 
 /* percentile bars */
-.pbar { display: grid; grid-template-columns: 112px minmax(0, 1fr) 34px 58px; gap: 10px; align-items: center; padding: 5px 0; }
+.pbar { display: grid; grid-template-columns: 112px minmax(0, 1fr) 34px 58px; gap: 10px; align-items: center; padding: 3px 0; }
 .pbar .lb { font-size: 13px; }
 .pbar .tr { height: 10px; border-radius: 99px; background: #eee8e9; overflow: hidden; }
 .pbar .tr i { display: block; height: 100%; border-radius: 99px; }
@@ -83,7 +86,7 @@ td.l, th.l { text-align: left; }
 .pbar.na .lb, .pbar.na .v { color: var(--muted); }
 
 /* skills */
-.radar svg { display: block; width: 100%; max-width: 440px; margin: 0 auto; height: auto; overflow: visible; }
+.radar svg { display: block; width: 100%; max-width: 360px; margin: 0 auto; height: auto; overflow: visible; }
 .radar text { font: 600 12px var(--body); fill: var(--ink); }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 1.1fr; gap: 0; margin-top: 10px; border: 1px solid var(--ink); }
 .tiles div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
@@ -95,7 +98,7 @@ td.l, th.l { text-align: left; }
 
 .court line, .court path, .court rect, .court circle.ln { fill: none; stroke: var(--court); stroke-width: .22; }
 .hex { stroke: #fff; stroke-width: .18; }
-.shots svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto 8px; }
+.shots svg { display: block; width: 100%; max-width: 400px; height: auto; margin: 0 auto 8px; }
 .chip-d { display: inline-block; min-width: 46px; padding: 2px 6px; border-radius: 5px; font-weight: 600; }
 
 .bars svg { width: 100%; height: auto; display: block; overflow: visible; }
@@ -110,6 +113,7 @@ footer { margin-top: 36px; font-size: 12px; color: var(--muted); display: flex; 
 #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: #fff; font: 500 12px var(--body); padding: 6px 9px; border-radius: 6px; max-width: 260px; }
 
 @media (max-width: 860px) {
+  .dash { grid-template-columns: minmax(0, 1fr); }
   .grid2 { grid-template-columns: minmax(0, 1fr); }
   .hero { grid-template-columns: auto minmax(0, 1fr); padding: 18px 18px 0; gap: 4px 16px; }
   .hero .side { display: none; }
@@ -298,9 +302,8 @@ function show(p, key) {
   cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
   const prof = p.profile?.[s.key];
   $("#app").innerHTML = hero(p, s) + strip(s, prof) +
-    `<div class="grid2">${percentiles(p, s, prof)}${prof ? skillsPanel(prof) : shotsPanel(p, s)}</div>
-     <div class="grid2">${prof ? shotsPanel(p, s) : ""}${splits(p, s)}${prof ? "" : trend(p, s)}</div>
-     <div class="grid2">${prof ? trend(p, s) : ""}${similar(prof) || ""}${seasonHistory(p)}</div>`;
+    `<div class="dash">${prof ? percentiles(p, s, prof) + skillsPanel(prof) + shotsPanel(p, s) + splits(p, s) + trend(p, s) + similar(prof)
+      : percentiles(p, s, prof) + shotsPanel(p, s) + splits(p, s) + trend(p, s)}<div class="full">${seasonHistory(p)}</div></div>`;
   $("#pick").value = p.slug;
   $("#src").textContent = "Data: " + (p.sources || []).join(", ") + (prof ? " · percentiles from every " + (s.league === "NCAA" ? "NCAA" : "WNBA") + " box score this season" : "");
   window.history.replaceState(null, "", "#" + p.slug);
