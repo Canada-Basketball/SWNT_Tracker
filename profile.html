@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scouting Report</title>
+<link rel="icon" type="image/svg+xml" href="/*__CB_LOGO__*/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Scouting report: one player per page, built from the same data as Player Watch.
+   Percentile colours match the shot chart: blue below average, pink average, red above. */
+:root {
+  --bg: #ffffff; --surface: #ffffff; --ink: #1b1517; --muted: #6c6064; --line: #e4dcdd; --soft: #f6f2f2;
+  --red: #ba0c2f; --deep: #7a0814; --head: #8e1024;
+  --h1: #1f4e9c; --h2: #8fb3e0; --h3: #f4b6c0; --h4: #dc3048; --h5: #85091e;
+  --court: #d8cfd1;
+  --display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--body); }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--red); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 max(16px, 3vw) 48px; }
+
+/* top bar */
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 14px 0; }
+.bar img { width: 40px; }
+.bar .t { font: 800 22px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; margin-right: auto; }
+.bar .t span { display: block; font: 600 11px var(--mono); letter-spacing: .18em; color: var(--red); margin-bottom: 3px; }
+.bar select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); max-width: 60vw; }
+.bar button, .bar a.back { font: 600 13px var(--body); padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); cursor: pointer; text-decoration: none; }
+
+/* header band */
+.hero { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 28px; align-items: end;
+  background: linear-gradient(120deg, var(--red), var(--deep)); color: #fff; border-radius: 16px; padding: 22px 28px 0; overflow: hidden; }
+.hero .ph { width: clamp(150px, 20vw, 240px); align-self: end; }
+.hero .ph img { display: block; width: 100%; }
+.hero .ph .init { aspect-ratio: 600 / 436; display: grid; place-items: center; font: 800 64px var(--display); color: rgba(255,255,255,.6); }
+.hero .who { padding-bottom: 22px; min-width: 0; }
+.hero h1 { font: 800 clamp(40px, 6vw, 76px)/.88 var(--display); text-transform: uppercase; margin: 0 0 12px; letter-spacing: .01em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags span { background: #fff; color: var(--ink); font: 600 12.5px var(--body); padding: 5px 11px; border-radius: 6px; }
+.hero .side { text-align: right; padding-bottom: 22px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.hero .side img { width: 72px; height: 72px; object-fit: contain; background: #fff; border-radius: 50%; padding: 8px; }
+.hero .side b { font: 700 26px/1 var(--display); text-transform: uppercase; }
+.hero .side small { font: 500 12px var(--mono); opacity: .8; }
+.hero .jn { position: absolute; right: 150px; top: -20px; font: 800 220px/1 var(--display); color: rgba(255,255,255,.08); pointer-events: none; }
+
+.seasons { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+.seasons button { font: 500 12.5px var(--body); padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+.seasons button[aria-pressed=true] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* tables */
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { background: var(--head); color: #fff; font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 9px 8px; text-align: center; white-space: nowrap; }
+td { padding: 8px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.l, th.l { text-align: left; }
+.strip { margin: 22px 0 6px; }
+.strip th { font-size: 11.5px; }
+.strip td { font: 700 24px/1.1 var(--display); padding: 10px 8px; border: 1px solid var(--line); }
+
+/* panels */
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 40px; margin-top: 30px; }
+.panel h2 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font: 800 22px/1 var(--display); text-transform: uppercase;
+  letter-spacing: .03em; margin: 0 0 14px; padding-left: 12px; border-left: 4px solid var(--head); }
+.panel h2 small { font: 500 11.5px var(--body); color: var(--muted); text-transform: none; letter-spacing: 0; text-align: right; }
+.note { font-size: 13px; color: var(--muted); background: var(--soft); border-radius: 10px; padding: 14px 16px; }
+
+/* percentile bars */
+.pbar { display: grid; grid-template-columns: 112px minmax(0, 1fr) 34px 58px; gap: 10px; align-items: center; padding: 5px 0; }
+.pbar .lb { font-size: 13px; }
+.pbar .tr { height: 10px; border-radius: 99px; background: #eee8e9; overflow: hidden; }
+.pbar .tr i { display: block; height: 100%; border-radius: 99px; }
+.pbar .pc { font: 700 15px var(--display); text-align: right; }
+.pbar .v { font: 500 12px var(--mono); background: var(--soft); border-radius: 6px; padding: 3px 6px; text-align: center; }
+.pbar.na .lb, .pbar.na .v { color: var(--muted); }
+
+/* skills */
+.radar svg { display: block; width: 100%; max-width: 440px; margin: 0 auto; height: auto; overflow: visible; }
+.radar text { font: 600 12px var(--body); fill: var(--ink); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 1.1fr; gap: 0; margin-top: 10px; border: 1px solid var(--ink); }
+.tiles div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
+.tiles span { display: block; font: 700 11.5px var(--display); letter-spacing: .06em; text-transform: uppercase; padding: 6px 4px; background: #fff; }
+.tiles b { display: block; font: 800 26px/1.5 var(--display); }
+.tiles .ov { grid-column: 4; grid-row: 1 / span 2; border-left: 2px solid var(--ink); border-bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+.tiles .ov b { font-size: 46px; line-height: 1.1; }
+
+.court line, .court path, .court rect, .court circle.ln { fill: none; stroke: var(--court); stroke-width: .22; }
+.hex { stroke: #fff; stroke-width: .18; }
+.shots svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto 8px; }
+.chip-d { display: inline-block; min-width: 46px; padding: 2px 6px; border-radius: 5px; font-weight: 600; }
+
+.bars svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bars text { fill: var(--muted); font: 400 9px var(--mono); }
+.bars .bar { fill: var(--red); }
+.bars .ts { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.bars .avg { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
+.bars .g line { stroke: var(--line); }
+.legend { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.legend i { display: inline-block; width: 14px; height: 4px; vertical-align: middle; margin-right: 4px; border-radius: 2px; }
+footer { margin-top: 36px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+#tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: #fff; font: 500 12px var(--body); padding: 6px 9px; border-radius: 6px; max-width: 260px; }
+
+@media (max-width: 860px) {
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .hero { grid-template-columns: auto minmax(0, 1fr); padding: 18px 18px 0; gap: 4px 16px; }
+  .hero .side { display: none; }
+  .hero .ph { width: 130px; }
+  .hero .jn { display: none; }
+  .pbar { grid-template-columns: 96px minmax(0, 1fr) 30px 54px; gap: 8px; }
+  .strip td { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <img src="/*__CB_LOGO__*/" alt="Canada Basketball">
+    <div class="t"><span>Canada Basketball · SWNT</span>Scouting Report</div>
+    <a class="back" href="./">← Player Watch</a>
+    <button id="prev" aria-label="Previous player">←</button>
+    <select id="pick" aria-label="Player"></select>
+    <button id="next" aria-label="Next player">→</button>
+  </div>
+  <main id="app"></main>
+  <footer><span id="src"></span><span id="built"></span></footer>
+</div>
+<div id="tip" hidden></div>
+<script>
+const DATA = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, d = 1) => v == null || Number.isNaN(v) ? "–" : Number(v).toFixed(d);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const dfmt = iso => { const [, m, d] = iso.split("-").map(Number); return `${MON[m - 1]} ${d}`; };
+const initials = n => n.split(/\s+/).map(w => w[0]).slice(0, 2).join("");
+const slug = n => n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const SHORT = { "EuroLeague Women": "EuroLeague", "EuroCup Women": "EuroCup", "Spain Liga Femenina": "LF", "Czech ZBL": "ZBL", "France LFB": "LFB",
+  "Romania LNBF": "LNBF", "Turkey KBSL": "KBSL", "Sweden Damligan": "Damligan", "Germany DBBL": "DBBL", "Baltic WBBL": "WBBL", "France Cup": "Coupe", "Spain Supercopa": "Supercopa" };
+
+/*__SHOTCHART__*/
+
+// percentile colour: same five steps as the shot chart (blue below, pink average, red above)
+const pVar = p => p == null ? "#d9d2d3" : `var(${p < 20 ? "--h1" : p < 40 ? "--h2" : p < 60 ? "--h3" : p < 80 ? "--h4" : "--h5"})`;
+const pInk = p => p != null && (p < 20 || p >= 80) ? "#fff" : "var(--ink)";
+
+const P = DATA.players.filter(p => p.covered).map(p => ({ ...p, slug: slug(p.name) }));
+let cur = null, skey = null;
+
+function summarize(games) {
+  const n = games.length, sum = k => games.reduce((a, g) => a + (g[k] || 0), 0);
+  if (!n) return null;
+  const pct = (m, a) => sum(a) ? 100 * sum(m) / sum(a) : null, tsa = sum("fga") + 0.44 * sum("fta");
+  return { gp: n, mpg: sum("min") / n, ppg: sum("pts") / n, rpg: sum("reb") / n, apg: sum("ast") / n, spg: sum("stl") / n, bpg: sum("blk") / n,
+    tpg: sum("tov") / n, fg: pct("fgm", "fga"), tp: pct("tpm", "tpa"), ft: pct("ftm", "fta"), ts: tsa ? 100 * sum("pts") / (2 * tsa) : null };
+}
+const gamesFor = (p, s) => p.games.filter(g => g.s === s.key || (s.parts || []).includes(g.s));
+
+/* ---- sections ---- */
+function hero(p, s) {
+  const tags = [s.team, s.league, p.pos, p.jersey ? "#" + p.jersey : "", `${s.gp} GP${s.gs ? " · " + s.gs + " GS" : ""}`].filter(Boolean);
+  return `<section class="hero">
+    ${p.jersey ? `<div class="jn num">${esc(p.jersey)}</div>` : ""}
+    <div class="ph">${p.photo ? `<img src="${p.photo}" alt="">` : `<div class="init">${esc(initials(p.name))}</div>`}</div>
+    <div class="who"><h1>${esc(p.name)}</h1><div class="tags">${tags.map(t => `<span>${esc(t)}</span>`).join("")}</div></div>
+    <div class="side">${s.logo ? `<img src="${s.logo}" alt="">` : ""}<b>${esc(s.label)} ${esc(SHORT[s.league] || s.league)}</b><small>Last game ${dfmt(s.last)}</small></div>
+  </section>
+  ${p.seasons.length > 1 ? `<div class="seasons" role="group" aria-label="Season">${p.seasons.map(x => `<button data-s="${esc(x.key)}" aria-pressed="${x.key === s.key}">${esc(x.label)} ${esc(SHORT[x.league] || x.league)} · ${esc(x.short || x.team)}</button>`).join("")}</div>` : ""}`;
+}
+function strip(s, prof) {
+  const cells = [["GP", s.gp, 0], ["MPG", s.mpg], ["PTS", s.ppg], ["REB", s.rpg], ["AST", s.apg], ["STL", s.spg], ["BLK", s.bpg], ["TOV", s.tpg],
+    ["FG%", s.fg], ["3P%", s.tp], ["FT%", s.ft], ["TS%", s.ts]];
+  if (prof && prof.usg != null) cells.push(["USG%", prof.usg]);
+  return `<div class="scroll strip"><table class="num"><tr>${cells.map(c => `<th>${c[0]}</th>`).join("")}</tr><tr>${cells.map(c => `<td>${fmt(c[1], c[2] ?? 1)}</td>`).join("")}</tr></table></div>`;
+}
+function percentiles(p, s, prof) {
+  if (!prof) {
+    const lg = SHORT[s.league] || s.league;
+    return `<section class="panel"><h2>Percentile profile</h2><p class="note">Percentiles need every player in the league, and that data exists only for NCAA and WNBA.
+      ${esc(lg)} is covered game by game for our players only, so this season has no peer comparison.${p.profile && Object.keys(p.profile).length ? " Pick an NCAA or WNBA season above to see one." : ""}</p></section>`;
+  }
+  const lg = s.league === "NCAA" ? "NCAA" : "WNBA";
+  return `<section class="panel"><h2>Percentile profile <small>vs ${prof.peers.toLocaleString()} ${lg} ${prof.group}<br>${prof.min_mpg}+ MPG, ${prof.min_gp}+ GP</small></h2>
+    ${prof.qualified ? "" : `<p class="note" style="margin-bottom:10px">Below the playing-time cut so far; ranked against the qualified group anyway.</p>`}
+    ${prof.metrics.map(([k, label, v, pc]) => `<div class="pbar${pc == null ? " na" : ""}"><span class="lb">${label}</span>
+      <span class="tr"><i style="width:${pc ?? 0}%;background:${pVar(pc)}"></i></span><span class="pc num" style="color:${pc == null ? "var(--muted)" : "var(--ink)"}">${pc ?? "–"}</span><span class="v num">${v ?? "–"}</span></div>`).join("")}
+    <div class="legend">Higher is always better (turnovers and fouls are flipped). Percentile: <span><i style="background:var(--h1)"></i>0–19</span><span><i style="background:var(--h2)"></i>20–39</span><span><i style="background:var(--h3)"></i>40–59</span><span><i style="background:var(--h4)"></i>60–79</span><span><i style="background:var(--h5)"></i>80+</span></div>
+  </section>`;
+}
+function radarSVG(skills) {
+  const n = skills.length, cx = 200, cy = 175, R = 125;
+  const pt = (i, r) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const poly = r => skills.map((_, i) => pt(i, r).map(v => v.toFixed(1)).join(",")).join(" ");
+  const rings = [[100, "#f4dfe2"], [75, "#f8e9eb"], [50, "#fbf3f4"], [25, "#fdf9f9"]].map(([v, c]) => `<polygon points="${poly(R * v / 100)}" fill="${c}" stroke="#e6d8da" stroke-width="1"/>`).join("");
+  const spokes = skills.map((_, i) => { const [x, y] = pt(i, R); return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e6d8da"/>`; }).join("");
+  const me = skills.map(([, v], i) => pt(i, R * (v ?? 0) / 100).map(x => x.toFixed(1)).join(",")).join(" ");
+  const dots = skills.map(([nm, v], i) => { const [x, y] = pt(i, R * (v ?? 0) / 100); return `<circle cx="${x}" cy="${y}" r="4" fill="${pVar(v)}" stroke="#fff" stroke-width="1.5" data-tip="${nm}: ${v ?? "–"}th percentile"/>`; }).join("");
+  const labels = skills.map(([nm, v], i) => { const [x, y] = pt(i, R + 22); const anchor = Math.abs(x - cx) < 5 ? "middle" : x > cx ? "start" : "end";
+    return `<text x="${x}" y="${y + 4}" text-anchor="${anchor}">${nm} <tspan fill="#6c6064">${v ?? "–"}</tspan></text>`; }).join("");
+  return `<svg viewBox="0 0 400 350" role="img" aria-label="Skill profile">${rings}${spokes}
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy}"/><polygon points="${poly(R / 2)}" fill="none" stroke="#c9b4b8" stroke-dasharray="3 3"/>
+    <polygon points="${me}" fill="rgba(186,12,47,.18)" stroke="#ba0c2f" stroke-width="2"/>${dots}${labels}</svg>`;
+}
+function skillsPanel(prof) {
+  if (!prof) return "";
+  const t = prof.skills;
+  return `<section class="panel"><h2>Skill profile <small>each skill = average percentile of its stats<br>dashed ring = league average</small></h2>
+    <div class="radar">${radarSVG(t)}</div>
+    <div class="tiles num">${t.map(([nm, v], i) => `<div style="grid-column:${i % 3 + 1};grid-row:${Math.floor(i / 3) + 1}"><span>${nm}</span><b style="background:${pVar(v)};color:${pInk(v)}">${v ?? "–"}</b></div>`).join("")}
+      <div class="ov"><span>Overall</span><b>${prof.overall ?? "–"}</b></div></div>
+  </section>`;
+}
+function splits(p, s) {
+  const gs = gamesFor(p, s);
+  const rows = [["Season", gs], ["Home", gs.filter(g => g.ha === "vs")], ["Away", gs.filter(g => g.ha === "@")],
+    ["Wins", gs.filter(g => g.wl === "W")], ["Losses", gs.filter(g => g.wl === "L")],
+    ["Started", gs.filter(g => g.st === true)], ["Off bench", gs.filter(g => g.st === false)], ["Last 5", gs.slice(0, 5)]]
+    .map(([k, g]) => [k, summarize(g)]).filter(([, x]) => x);
+  const base = rows[0][1];
+  const d = (v, b, hi = true) => v == null || b == null ? "" : (() => { const x = (v - b) * (hi ? 1 : -1); return x >= 1.5 ? "background:#f6d3d9" : x <= -1.5 ? "background:#d9e4f3" : ""; })();
+  return `<section class="panel"><h2>Splits <small>shaded = clearly better (red) or worse (blue) than her season</small></h2><div class="scroll"><table class="num">
+    <tr><th class="l">Split</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>TOV</th><th>FG%</th><th>3P%</th><th>TS%</th></tr>
+    ${rows.map(([k, x], i) => `<tr${i ? "" : ' style="font-weight:600"'}><td class="l">${k}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td>
+      <td style="${i ? d(x.ppg, base.ppg) : ""}">${fmt(x.ppg)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td style="${i ? d(x.tpg, base.tpg, false) : ""}">${fmt(x.tpg)}</td>
+      <td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td style="${i ? d(x.ts / 2.5, base.ts / 2.5) : ""}">${fmt(x.ts)}</td></tr>`).join("")}
+  </table></div></section>`;
+}
+const ZONES = [["At the rim", 58], ["Paint (non-rim)", 40], ["Midrange", 38], ["Corner 3", 33], ["Above-break 3", 33]];
+function zoneOf(x, y) {
+  const d = Math.hypot(x - 25, y);
+  if (Math.abs(x - 25) >= 22 && y <= AVG_CORNER_Y) return 3;
+  if (d > 22.15) return 4;
+  if (d < 4) return 0;
+  if (Math.abs(x - 25) <= 8 && y <= 13.75) return 1;
+  return 2;
+}
+function shotsPanel(p, s) {
+  const shots = p.shots[s.key] || [];
+  if (!shots.length) return `<section class="panel"><h2>Shot profile</h2><p class="note">No shot locations for this season.</p></section>`;
+  const z = ZONES.map(() => ({ n: 0, m: 0 }));
+  shots.forEach(([x, y, m]) => { const k = zoneOf(x, y); z[k].n++; z[k].m += m; });
+  return `<section class="panel"><h2>Shot profile <small>${shots.length} FGA charted · colour = FG% vs typical for that spot</small></h2>
+    <div class="shots">${courtSVG(shots, { r: 1.35, maxY: 30, interactive: true })}</div>
+    <div class="scroll"><table class="num"><tr><th class="l">Zone</th><th>FGA</th><th>Share</th><th>FG%</th><th>Typical</th><th>vs typical</th></tr>
+    ${z.map((v, i) => { const pct = v.n ? 100 * v.m / v.n : null, diff = pct == null ? null : pct - ZONES[i][1];
+      return `<tr><td class="l">${ZONES[i][0]}</td><td>${v.m}/${v.n}</td><td>${fmt(100 * v.n / shots.length, 0)}%</td><td>${fmt(pct)}</td><td>${ZONES[i][1]}%</td>
+        <td>${diff == null ? "–" : `<span class="chip-d" style="background:var(${fgVar(diff)});color:${Math.abs(diff) >= 15 ? "#fff" : "var(--ink)"}">${diff > 0 ? "+" : ""}${fmt(diff, 0)}</span>`}</td></tr>`; }).join("")}
+    </table></div></section>`;
+}
+function trend(p, s) {
+  const gs = gamesFor(p, s).slice().reverse();
+  if (!gs.length) return "";
+  const W = 560, H = 180, pl = 26, pr = 30, pt = 8, pb = 20, n = gs.length, bw = (W - pl - pr) / Math.max(n, 12);
+  const top = Math.max(10, ...gs.map(g => g.pts)) * 1.1, y = v => pt + (H - pt - pb) * (1 - v / top), yt = v => pt + (H - pt - pb) * (1 - v / 100);
+  const avg = gs.reduce((a, g) => a + g.pts, 0) / n;
+  // rolling 5-game TS%
+  const roll = gs.map((_, i) => { const w = gs.slice(Math.max(0, i - 4), i + 1), a = w.reduce((t, g) => t + g.fga + 0.44 * g.fta, 0);
+    return a ? 100 * w.reduce((t, g) => t + g.pts, 0) / (2 * a) : null; });
+  const line = roll.map((v, i) => v == null ? "" : `${i && roll[i - 1] != null ? "L" : "M"}${(pl + i * bw + bw / 2).toFixed(1)},${yt(Math.min(v, 100)).toFixed(1)}`).join("");
+  const bars = gs.map((g, i) => `<rect class="bar" x="${(pl + i * bw + bw * .15).toFixed(1)}" y="${y(g.pts).toFixed(1)}" width="${(bw * .7).toFixed(1)}" height="${(y(0) - y(g.pts)).toFixed(1)}" rx="2"
+    data-tip="${dfmt(g.d)} ${g.ha} ${esc(g.opp)} (${g.wl} ${g.sc}): ${g.pts} PTS, ${g.fgm}-${g.fga} FG, ${g.min} min"/>`).join("");
+  const grid = [0, .5, 1].map(f => `<line x1="${pl}" x2="${W - pr}" y1="${y(top * f / 1.1)}" y2="${y(top * f / 1.1)}"/><text x="${pl - 4}" y="${y(top * f / 1.1) + 3}" text-anchor="end">${Math.round(top * f / 1.1)}</text>`).join("");
+  return `<section class="panel"><h2>Game by game <small>bars = points · line = rolling 5-game TS% (right axis)</small></h2><div class="bars">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points by game"><g class="g">${grid}</g>${bars}
+    <line class="avg" x1="${pl}" x2="${W - pr}" y1="${y(avg)}" y2="${y(avg)}"/><path class="ts" d="${line}"/>
+    <text x="${W - pr + 4}" y="${yt(50) + 3}">50%</text><text x="${W - pr + 4}" y="${yt(100) + 3}">100%</text>
+    <text x="${pl}" y="${H - 4}">${dfmt(gs[0].d)}</text><text x="${W - pr}" y="${H - 4}" text-anchor="end">${n > 1 ? dfmt(gs.at(-1).d) : ""}</text></svg></div>
+    <div class="legend"><span><i style="background:var(--red)"></i>Points</span><span><i style="background:var(--ink)"></i>TS% (5-game)</span><span>avg ${fmt(avg)} PTS</span></div></section>`;
+}
+function seasonHistory(p) {
+  const rows = p.seasons.filter(x => !x.parts || x.key.startsWith("All club"));
+  return `<section class="panel"><h2>Season history</h2><div class="scroll"><table class="num">
+    <tr><th class="l">Season</th><th class="l">Team</th><th>GP</th><th>MIN</th><th>PTS</th><th>+/-</th><th>REB</th><th>AST</th><th>FG%</th><th>3P%</th><th>TS%</th><th>Overall</th></tr>
+    ${rows.map((x, i) => { const prev = rows[i + 1], dp = prev ? x.ppg - prev.ppg : null, ov = p.profile?.[x.key]?.overall;
+      return `<tr><td class="l">${esc(x.label)} ${esc(SHORT[x.league] || x.league)}</td><td class="l">${esc(x.short || x.team)}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td><td><b>${fmt(x.ppg)}</b></td>
+        <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td>
+        <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span>`}</td></tr>`; }).join("")}
+  </table></div></section>`;
+}
+function similar(prof) {
+  if (!prof || !prof.similar.length) return "";
+  return `<section class="panel"><h2>Similar players <small>closest percentile profile in the same league-season</small></h2><div class="scroll"><table class="num">
+    <tr><th class="l">Player</th><th class="l">Team</th><th>Pos</th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>TS%</th><th>Match</th></tr>
+    ${prof.similar.map(q => `<tr><td class="l">${esc(q.name)}</td><td class="l">${esc(q.team)}</td><td>${esc(q.pos)}</td><td>${q.gp}</td><td>${fmt(q.mpg)}</td><td>${fmt(q.ppg)}</td><td>${fmt(q.rpg)}</td><td>${fmt(q.apg)}</td><td>${fmt(q.ts)}</td><td><b>${q.match}%</b></td></tr>`).join("")}
+  </table></div></section>`;
+}
+
+function show(p, key) {
+  cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
+  const prof = p.profile?.[s.key];
+  $("#app").innerHTML = hero(p, s) + strip(s, prof) +
+    `<div class="grid2">${percentiles(p, s, prof)}${prof ? skillsPanel(prof) : shotsPanel(p, s)}</div>
+     <div class="grid2">${prof ? shotsPanel(p, s) : ""}${splits(p, s)}${prof ? "" : trend(p, s)}</div>
+     <div class="grid2">${prof ? trend(p, s) : ""}${similar(prof) || ""}${seasonHistory(p)}</div>`;
+  $("#pick").value = p.slug;
+  $("#src").textContent = "Data: " + (p.sources || []).join(", ") + (prof ? " · percentiles from every " + (s.league === "NCAA" ? "NCAA" : "WNBA") + " box score this season" : "");
+  window.history.replaceState(null, "", "#" + p.slug);
+  document.title = `${p.name} · Scouting Report`;
+}
+$("#pick").innerHTML = P.slice().sort((a, b) => a.name.split(" ").pop().localeCompare(b.name.split(" ").pop()))
+  .map(p => `<option value="${p.slug}">${esc(p.name)} · ${esc(p.seasons[0].short || p.seasons[0].team)}</option>`).join("");
+const order = () => [...$("#pick").options].map(o => o.value);
+const go = d => { const o = order(), i = o.indexOf(cur.slug); show(P.find(p => p.slug === o[(i + d + o.length) % o.length])); window.scrollTo(0, 0); };
+$("#pick").addEventListener("change", e => show(P.find(p => p.slug === e.target.value)));
+$("#prev").addEventListener("click", () => go(-1));
+$("#next").addEventListener("click", () => go(1));
+$("#app").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (b) show(cur, b.dataset.s); });
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest?.("[data-tip]"), tip = $("#tip");
+  if (!t) { tip.hidden = true; return; }
+  tip.textContent = t.dataset.tip; tip.hidden = false;
+  tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = (e.clientY + 14) + "px";
+});
+addEventListener("hashchange", () => { const p = P.find(x => x.slug === location.hash.slice(1)); if (p && p !== cur) show(p); });
+$("#built").textContent = `Games through ${DATA.data_through} · built ${DATA.built}`;
+show(P.find(p => p.slug === location.hash.slice(1)) || P.find(p => p.profile && Object.keys(p.profile).length) || P[0]);
+</script>
+</body>
+</html>

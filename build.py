@@ -16,6 +16,7 @@ from PIL import Image
 
 import instat
 import overseas
+import scout
 
 ROOT = Path(__file__).parent
 RAW = ROOT / "data" / "raw"
@@ -347,6 +348,11 @@ def main():
         elif p.get("photo_espn_id"):
             pl["photo"] = data_uri("https://a.espncdn.com/i/headshots/womens-college-basketball/players/full/"
                                    f"{p['photo_espn_id']}.png", PHOTO_W)
+    # scouting-report numbers (percentiles vs league peers, skills, similar players) for NCAA/WNBA seasons
+    prof = scout.profiles(box, [p["espn_id"] for p in roster if p.get("espn_id")])
+    for pl in players:
+        if pl.get("espn_id"):
+            pl["profile"] = prof.get(pl["espn_id"], {})
     logos.update(LOGOS)
     logo_uris = {u: (local_uri(Path(u[6:]), LOGO_W) if u.startswith("local:") else data_uri(u, LOGO_W)) for u in logos}
     for pl in players:
@@ -365,6 +371,17 @@ def main():
     html = (ROOT / "template.html").read_text().replace(
         "/*__DATA__*/null", json.dumps(payload, separators=(",", ":"))).replace(
         "/*__CB_LOGO__*/", "data:image/svg+xml;base64," + base64.b64encode(logo_svg).decode())
+    # scouting-report demo page: same data, its own template
+    if (ROOT / "profile.html").exists():
+        tpl = (ROOT / "template.html").read_text()
+        chart = tpl[tpl.index("/* ---- shot chart"):tpl.index("/* ---- cards ---- */")]  # one shot-chart source
+        page = (ROOT / "profile.html").read_text().replace("/*__SHOTCHART__*/", chart).replace(
+            "/*__DATA__*/null", json.dumps(payload, separators=(",", ":"))).replace(
+            "/*__CB_LOGO__*/", "data:image/svg+xml;base64," + base64.b64encode(logo_svg).decode())
+        for dest in ([ROOT / "docs" / "profile.html"] if PUBLIC else [OUT.parent / "profile.html"]):
+            dest.parent.mkdir(exist_ok=True)
+            dest.write_text(page)
+            print(f"wrote {dest}")
     out = OUT
     if PUBLIC:  # same content as the private build, written to docs/ for GitHub Pages
         out = ROOT / "docs" / "index.html"
