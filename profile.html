@@ -69,7 +69,8 @@ td.l, th.l { text-align: left; }
 /* panels */
 .dash { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 36px; margin-top: 24px; align-items: start; }
 .dash > .full { grid-column: 1 / -1; }
-@media (max-width: 1400px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dash > .col { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+@media (max-width: 1400px) { .dash { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dash > .col { display: contents; } }
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 40px; margin-top: 30px; }
 .panel h2 { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font: 800 22px/1 var(--display); text-transform: uppercase;
   letter-spacing: .03em; margin: 0 0 14px; padding-left: 12px; border-left: 4px solid var(--head); }
@@ -324,8 +325,8 @@ function show(p, key) {
   cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
   const prof = p.profile?.[s.key];
   $("#app").innerHTML = hero(p, s) + strip(s, prof) +
-    `<div class="dash">${prof ? percentiles(p, s, prof) + skillsPanel(prof) + shotsPanel(p, s) + quarters(prof) + splits(p, s, prof) + trend(p, s) + similar(prof)
-      : percentiles(p, s, prof) + shotsPanel(p, s) + splits(p, s) + trend(p, s)}<div class="full">${seasonHistory(p)}</div></div>`;
+    `<div class="dash">${(prof ? [percentiles(p, s, prof) + quarters(prof), skillsPanel(prof) + splits(p, s, prof), shotsPanel(p, s) + trend(p, s) + similar(prof)]
+      : [percentiles(p, s, prof) + trend(p, s), shotsPanel(p, s), splits(p, s)]).map(c => `<div class="col">${c}</div>`).join("")}<div class="full">${seasonHistory(p)}</div></div>`;
   $("#pick").value = p.slug;
   $("#src").textContent = "Data: " + (p.sources || []).join(", ") + (prof ? " · percentiles from every " + (s.league === "NCAA" ? "NCAA" : "WNBA") + " box score this season" : "");
   window.history.replaceState(null, "", "#" + p.slug);
