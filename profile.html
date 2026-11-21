@@ -306,11 +306,11 @@ function trend(p, s) {
 function seasonHistory(p) {
   const rows = p.seasons.filter(x => !x.parts || x.key.startsWith("All club"));
   return `<section class="panel"><h2>Season history</h2><div class="scroll"><table class="num">
-    <tr><th class="l">Season</th><th class="l">Team</th><th>GP</th><th>MIN</th><th>PTS</th><th>+/-</th><th>REB</th><th>AST</th><th>FG%</th><th>3P%</th><th>TS%</th><th>Overall</th></tr>
+    <tr><th class="l">Season</th><th class="l">Team</th><th>GP</th><th>PTS</th><th>+/-</th><th>REB</th><th>AST</th><th>3P%</th><th>TS%</th><th>OVR</th></tr>
     ${rows.map((x, i) => { const prev = rows[i + 1], dp = prev ? x.ppg - prev.ppg : null, ov = p.profile?.[x.key]?.overall;
-      return `<tr><td class="l">${esc(x.label)} ${esc(SHORT[x.league] || x.league)}</td><td class="l">${esc(x.short || x.team)}</td><td>${x.gp}</td><td>${fmt(x.mpg)}</td><td><b>${fmt(x.ppg)}</b></td>
-        <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.fg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td>
-        <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span> <small style="color:var(--muted)">vs ${p.profile[x.key].league} ${p.profile[x.key].role === "G" ? "G/W" : "bigs"}</small>`}</td></tr>`; }).join("")}
+      return `<tr><td class="l">${esc(x.label)} ${esc(SHORT[x.league] || x.league)}</td><td class="l">${esc(x.short || x.team)}</td><td>${x.gp}</td><td><b>${fmt(x.ppg)}</b></td>
+        <td style="color:${dp == null ? "inherit" : dp >= 0 ? "#85091e" : "#1f4e9c"}">${dp == null ? "" : (dp >= 0 ? "+" : "") + fmt(dp)}</td><td>${fmt(x.rpg)}</td><td>${fmt(x.apg)}</td><td>${fmt(x.tp)}</td><td>${fmt(x.ts)}</td>
+        <td>${ov == null ? "–" : `<span class="chip-d" style="background:${pVar(ov)};color:${pInk(ov)}">${ov}</span>`}</td></tr>`; }).join("")}
   </table></div></section>`;
 }
 function similar(prof) {
@@ -325,8 +325,8 @@ function show(p, key) {
   cur = p; const s = p.seasons.find(x => x.key === key) || p.seasons[0]; skey = s.key;
   const prof = p.profile?.[s.key];
   $("#app").innerHTML = hero(p, s) + strip(s, prof) +
-    `<div class="dash">${(prof ? [percentiles(p, s, prof) + quarters(prof), skillsPanel(prof) + splits(p, s, prof), shotsPanel(p, s) + trend(p, s) + similar(prof)]
-      : [percentiles(p, s, prof) + trend(p, s), shotsPanel(p, s), splits(p, s)]).map(c => `<div class="col">${c}</div>`).join("")}<div class="full">${seasonHistory(p)}</div></div>`;
+    `<div class="dash">${(prof ? [percentiles(p, s, prof) + quarters(prof), skillsPanel(prof) + splits(p, s, prof) + seasonHistory(p), shotsPanel(p, s) + trend(p, s) + similar(prof)]
+      : [percentiles(p, s, prof) + trend(p, s), shotsPanel(p, s), splits(p, s) + seasonHistory(p)]).map(c => `<div class="col">${c}</div>`).join("")}</div>`;
   $("#pick").value = p.slug;
   $("#src").textContent = "Data: " + (p.sources || []).join(", ") + (prof ? " · percentiles from every " + (s.league === "NCAA" ? "NCAA" : "WNBA") + " box score this season" : "");
   window.history.replaceState(null, "", "#" + p.slug);
