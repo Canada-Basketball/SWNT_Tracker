@@ -45,9 +45,9 @@ jobs:
 
       - name: Publish
         run: |
-          if git diff --quiet -- docs/index.html; then echo "page unchanged"; exit 0; fi
+          if git diff --quiet -- docs/ && [ -z "$(git ls-files --others docs/)" ]; then echo "page unchanged"; exit 0; fi
           git config user.name "jordanngo205"
           git config user.email "jordanngo205@users.noreply.github.com"
-          git add docs/index.html
+          git add docs/index.html docs/profile.html
           git commit -m "Daily data refresh $(date -u +%F)"
           git push

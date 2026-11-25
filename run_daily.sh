@@ -16,8 +16,8 @@ mkdir -p logs
 
   if .venv/bin/python build.py --offline --public; then
     echo "public build OK"
-    if ! git diff --quiet -- docs/index.html; then
-      git add docs/index.html
+    if ! git diff --quiet -- docs/ || [ -n "$(git ls-files --others docs/)" ]; then
+      git add docs/index.html docs/profile.html
       git commit -q -m "Daily data refresh $(date +%F)" && git push -q origin main && echo "pushed to GitHub Pages"
     else
       echo "public page unchanged"
