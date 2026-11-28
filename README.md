@@ -70,6 +70,7 @@ Overrides: drop an image in `data/photos/<player-slug>.png` (e.g. `sami-hill.png
 |---|---|
 | `build.py` | Loads all sources, merges seasons, embeds photos/logos, writes the page |
 | `overseas.py` | FIBA, LiveStats, FEB, ŽBL and TBF collectors |
+| `eurobasket_scraper.py` | Standalone Eurobasket tool (`login` / `fetch urls.txt` / `parse`): caches pages and dumps their tables to CSV in `data/eurobasket_scraper/` (not committed). Needs `pip install playwright-stealth lxml` |
 | `instat.py` | Reads the saved InStat file into games and shot charts |
 | `instat_fetch.py` | Daily InStat pull (Chrome via Playwright) |
 | `instat_collect.js` | Manual fallback: same collector, pasted into a logged-in InStat tab |
