@@ -35,7 +35,7 @@ Every build checks each game (points add up from the shooting splits, W/L matche
 
 ## Daily refresh
 
-`.github/workflows/daily.yml` runs on GitHub's servers every day at 12:00 UTC (07:00 Toronto in winter), so no laptop is needed. It pulls InStat, rebuilds the page and pushes `docs/index.html` when it changes. Run it by hand from the repo's Actions tab ("Daily refresh" → Run workflow). The Hudl login is stored as repository secrets `HUDL_EMAIL` and `HUDL_PASSWORD`. InStat data is fetched fresh each run and never committed. If the InStat pull fails, the run stops and yesterday's page stays up.
+`.github/workflows/daily.yml` runs on GitHub's servers every day at 12:00 UTC (07:00 Toronto in winter), so no laptop is needed. It pulls InStat, rebuilds the page and pushes `docs/index.html` when it changes. Run it by hand from the repo's Actions tab ("Daily refresh" → Run workflow). The Hudl login is stored as repository secrets `HUDL_EMAIL` and `HUDL_PASSWORD`. InStat data is fetched fresh each run and never committed. If the InStat pull fails, the run stops and yesterday's page stays up. The run also pulls Eurobasket (`eurobasket.py`) with secrets `EUROBASKET_EMAIL` and `EUROBASKET_PASSWORD`; its browser profile is kept between runs in the Actions cache so it stays signed in. If Eurobasket shows its device-limit, verification or Cloudflare page, that step stops, the page is built from the last committed `data/eurobasket_stats/`, and `status.json` says why.
 
 `run_daily.sh` does the same on a Mac, using `.env` for the login. Its launch agent is switched off (`~/Library/LaunchAgents/ca.canadabasketball.wnt-player-watch.plist.disabled`) so it doesn't overlap with GitHub Actions; run the script by hand if Actions is down.
 

@@ -1,5 +1,5 @@
 # Daily refresh on GitHub's servers (no laptop needed): InStat pull, build, publish to GitHub Pages.
-# Needs repository secrets HUDL_EMAIL and HUDL_PASSWORD. InStat data is fetched fresh each run and is
+# Needs repository secrets HUDL_EMAIL, HUDL_PASSWORD, EUROBASKET_EMAIL and EUROBASKET_PASSWORD. InStat data is fetched fresh each run and is
 # never committed or cached; only docs/index.html is pushed. If InStat fails, yesterday's page stays up.
 name: Daily refresh
 
@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install pandas pyarrow requests pillow playwright
+      - run: pip install pandas pyarrow requests pillow playwright beautifulsoup4 lxml
 
       # public feed caches only (SportsDataverse files, FIBA/LiveStats/FEB box scores)
       - uses: actions/cache@v4
@@ -40,14 +40,31 @@ jobs:
         # Hudl rejects windowless Chrome, so Chrome runs in a virtual display
         run: xvfb-run -a python instat_fetch.py
 
+      # Eurobasket's browser profile (login cookies) is kept between runs, so Eurobasket sees the same
+      # returning computer each day instead of a new one; it signs in only when the session has ended.
+      - uses: actions/cache@v4
+        with:
+          path: data/eurobasket_profile
+          key: eurobasket-profile-${{ github.run_id }}
+          restore-keys: eurobasket-profile-
+
+      - name: Eurobasket pull
+        # never fails the run: on a login limit, verification page or Cloudflare box it stops and the
+        # committed data/eurobasket_stats/ from the last good pull is used (status.json says why)
+        continue-on-error: true
+        env:
+          EUROBASKET_EMAIL: ${{ secrets.EUROBASKET_EMAIL }}
+          EUROBASKET_PASSWORD: ${{ secrets.EUROBASKET_PASSWORD }}
+        run: xvfb-run -a python eurobasket.py
+
       - name: Build page
         run: python build.py --public
 
       - name: Publish
         run: |
-          if git diff --quiet -- docs/ && [ -z "$(git ls-files --others docs/)" ]; then echo "page unchanged"; exit 0; fi
+          if git diff --quiet -- docs/ data/eurobasket_stats/2026-27.json && [ -z "$(git ls-files --others docs/)" ]; then echo "page unchanged"; exit 0; fi
           git config user.name "jordanngo205"
           git config user.email "jordanngo205@users.noreply.github.com"
-          git add docs/index.html docs/profile.html
+          git add docs/index.html docs/profile.html data/eurobasket_stats/
           git commit -m "Daily data refresh $(date -u +%F)"
           git push
