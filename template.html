@@ -225,6 +225,29 @@ footer a { color: #ba0c2f; }
   .meta { text-align: left; }
 }
 .report-link { text-decoration: none; color: inherit; white-space: nowrap; }
+.sitetabs { background: #fff; border-bottom: 1px solid var(--glass-line); position: sticky; top: 0; z-index: 5; }
+.sitetabs-in { max-width: 1840px; margin: 0 auto; padding-inline: max(16px, 3vw); display: flex; gap: 4px; overflow-x: auto; }
+.sitetabs button { font: 700 15px var(--display); letter-spacing: .04em; text-transform: uppercase; background: none; border: 0; border-bottom: 3px solid transparent;
+  padding: 14px 14px 11px; color: #6c6064; cursor: pointer; white-space: nowrap; }
+.sitetabs button[aria-selected="true"] { color: #ba0c2f; border-bottom-color: #ba0c2f; }
+.lg-sub { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 18px; }
+.lg-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.lg-h h2 { font: 800 30px/1 var(--display); text-transform: uppercase; margin: 0; }
+.lg-h .note { margin: 0; }
+.lgt { width: 100%; border-collapse: collapse; font: 500 13px var(--body); font-variant-numeric: tabular-nums; }
+.lgt th { background: #85091e; color: #fff; font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; padding: 8px 7px; text-align: right; white-space: nowrap; position: sticky; top: 0; }
+.lgt th.l, .lgt td.l { text-align: left; }
+.lgt th[data-k] { cursor: pointer; }
+.lgt th[aria-sort] { text-decoration: underline; }
+.lgt td { padding: 7px; text-align: right; border-bottom: 1px solid var(--glass-line); white-space: nowrap; }
+.lgt tr.day td { background: #f3eeef; font-weight: 700; text-align: left; }
+.lgt td.nm { font-weight: 600; cursor: pointer; }
+.lgt td.nm:hover { color: #ba0c2f; text-decoration: underline; }
+.lgt td.hot { font-weight: 700; }
+.lg-scroll { overflow-x: auto; border: 1px solid var(--glass-line); border-radius: 8px; max-height: 78vh; }
+.lg-empty { padding: 30px 0; color: #6c6064; }
+.report-in { display: inline-block; margin-top: 8px; font-weight: 600; color: #ba0c2f; text-decoration: none; }
+.report-in:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -232,11 +255,15 @@ footer a { color: #ba0c2f; }
 <header class="banner">
   <div class="banner-in">
     <img src="/*__CB_LOGO__*/" alt="Canada Basketball">
-    <div class="bt"><div class="b1">Canada Basketball</div><h1 class="b2">Player Watch<span>Senior Women's National Team · 2026-27</span></h1></div>
+    <div class="bt"><div class="b1">Canada Basketball</div><h1 class="b2">SWNT Tracker<span>Senior Women's National Team · 2026-27</span></h1></div>
     <div class="meta" id="meta"></div>
   </div>
 </header>
-<div class="wrap">
+<nav class="sitetabs" id="sitetabs" aria-label="Sections"><div class="sitetabs-in">
+  <button data-tab="international">International</button><button data-tab="ncaa">NCAA</button><button data-tab="wnba">WNBA</button><button data-tab="watch">SWNT Player Watch</button>
+</div></nav>
+<div class="wrap" id="league" hidden></div>
+<div class="wrap" id="watch">
 
   <div class="controls">
     <input type="search" id="q" placeholder="Search player or team" aria-label="Search player or team">
@@ -268,6 +295,7 @@ footer a { color: #ba0c2f; }
 const DATA = /*__DATA__*/null;
 
 const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fmt = (v, d = 1) => v == null ? "–" : Number(v).toFixed(d);
 const slug = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -565,7 +593,7 @@ function openPlayer(p, skey) {
     const last5 = sg.slice(0, 5);
     const posName = { G: "Guard", F: "Forward", C: "Center" }[p.pos] || p.pos;
     const kick = `${p.jersey ? "#" + esc(p.jersey) + " · " : ""}${esc(posName)}`;
-    dlg.innerHTML = head(`${esc(p.seasons[0].team_full)} · ${p.seasons[0].league} · last game ${dfmtY(p.last_game)}<br><span style="opacity:.75">Source: ${esc((p.sources || []).join(", "))}</span>`, kick) + `
+    dlg.innerHTML = head(`${esc(p.seasons[0].team_full)} · ${p.seasons[0].league} · last game ${dfmtY(p.last_game)}<br><span style="opacity:.75">Source: ${esc((p.sources || []).join(", "))}</span><br><a class="report-in" href="profile.html#${p.slug}">Scouting report →</a>`, kick) + `
     <div class="dbody">
       <section>
         <h3>Season averages</h3>
@@ -605,7 +633,7 @@ function openPlayer(p, skey) {
   if (location.hash !== "#" + p.slug) history.replaceState(null, "", "#" + p.slug);
 }
 function closePlayer() { const d = $("#dlg"); if (d.open) d.close(); }
-$("#dlg").addEventListener("close", () => { cur = null; hideTip(); if (location.hash) history.replaceState(null, "", location.pathname + location.search); });
+$("#dlg").addEventListener("close", () => { cur = null; hideTip(); if (location.hash !== "#watch") history.replaceState(null, "", "#watch"); });
 $("#dlg").addEventListener("click", e => {
   if (e.target === e.currentTarget || e.target.closest("[data-close]")) return closePlayer();
   const sb = e.target.closest("[data-season]"); if (sb && cur) openPlayer(cur, sb.dataset.season);
@@ -634,9 +662,83 @@ $("#q").addEventListener("input", render);
 $("#sort").addEventListener("change", render);
 $("#chips").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; render(); } });
 $("#grid").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openPlayer(P.find(p => p.slug === c.dataset.slug)); });
-function fromHash() { const p = P.find(x => "#" + x.slug === location.hash); if (p) openPlayer(p); else closePlayer(); }
+/* ---- league tabs (International / NCAA / WNBA): every game our players played this season ---- */
+const TABS = { international: "International", ncaa: "NCAA", wnba: "WNBA" };
+const leagueOf = s => s.startsWith("NCAA-") ? "ncaa" : s.startsWith("WNBA-") ? "wnba" : "international";
+const isCurrent = s => s === DATA.current.NCAA || s === DATA.current.WNBA || s.endsWith("|" + DATA.club_season);
+const ROWS = P.flatMap(p => p.games.filter(g => isCurrent(g.s)).map(g => {
+  const se = p.seasons.find(x => x.key === g.s) || {};
+  const lg = leagueOf(g.s), comp = lg === "international" ? g.s.split("|")[0] : TABS[lg];
+  return { ...g, name: p.name, slug: p.slug, team: g.team || se.short || se.team || "", league: lg, comp,
+    fg2m: g.fgm - g.tpm, fg2a: g.fga - g.tpa, dreb: g.reb - g.oreb };
+}));
+const SUBS = [["daily", "Daily box stats (last 7 days)"], ["avg", "Season averages"], ["avg7", "Last 7-day averages"], ["log", "Game logs"]];
+let lgTab = "international", lgSub = "daily", lgSort = { k: "pts", dir: -1 }, lgPlayer = "";
+const pctS = (m, a) => a ? fmt(100 * m / a) : "–";
+const heat = (v, steps) => v >= steps[2] ? "var(--h5)" : v >= steps[1] ? "var(--h4)" : v >= steps[0] ? "var(--h3)" : "";
+const ink = (v, steps) => v >= steps[1] ? "#fff" : "inherit";
+const HEAT = { pts: [10, 15, 20], reb: [5, 8, 10], ast: [3, 5, 7] };
+const cell = (k, v, d = 0) => { const st = HEAT[k]; const bg = st ? heat(v, st) : "";
+  return `<td${bg ? ` class="hot" style="background:${bg};color:${ink(v, st)}"` : ""}>${typeof v === "number" ? fmt(v, d) : v}</td>`; };
+const STAT_TH = ["MIN","PTS","FGM","FGA","FG%","2P","2PA","2P%","3P","3PA","3P%","FTM","FTA","FT%","ORB","DRB","TRB","AST","PF","TO","STL","BLK"];
+const STAT_K = ["min","pts","fgm","fga","fgp","fg2m","fg2a","fg2p","tpm","tpa","tpp","ftm","fta","ftp","oreb","dreb","reb","ast","pf","tov","stl","blk"];
+const statCells = (x, d) => [cell("min", x.min, d), cell("pts", x.pts, d), cell("", x.fgm, d), cell("", x.fga, d), `<td>${pctS(x.fgm, x.fga)}</td>`,
+  cell("", x.fg2m, d), cell("", x.fg2a, d), `<td>${pctS(x.fg2m, x.fg2a)}</td>`, cell("", x.tpm, d), cell("", x.tpa, d), `<td>${pctS(x.tpm, x.tpa)}</td>`,
+  cell("", x.ftm, d), cell("", x.fta, d), `<td>${pctS(x.ftm, x.fta)}</td>`, cell("", x.oreb, d), cell("", x.dreb, d), cell("reb", x.reb, d),
+  cell("ast", x.ast, d), cell("", x.pf, d), cell("", x.tov, d), cell("", x.stl, d), cell("", x.blk, d)].join("");
+function averages(rows) {
+  const by = {};
+  rows.forEach(r => { const k = r.slug + "|" + r.comp; (by[k] = by[k] || []).push(r); });
+  return Object.values(by).map(gs => { const n = gs.length, a = { name: gs[0].name, slug: gs[0].slug, team: gs[0].team, comp: gs[0].comp, gp: n };
+    ["min","pts","fgm","fga","fg2m","fg2a","tpm","tpa","ftm","fta","oreb","dreb","reb","ast","pf","tov","stl","blk"].forEach(k => a[k] = gs.reduce((s, g) => s + (g[k] || 0), 0) / n);
+    a.fgp = a.fga ? a.fgm / a.fga : -1; a.fg2p = a.fg2a ? a.fg2m / a.fg2a : -1; a.tpp = a.tpa ? a.tpm / a.tpa : -1; a.ftp = a.fta ? a.ftm / a.fta : -1;
+    return a; });
+}
+function renderLeague() {
+  const el = $("#league"), rows = ROWS.filter(r => r.league === lgTab).sort((a, b) => b.d.localeCompare(a.d));
+  const last = DATA.built, from = new Date(new Date(last) - 6 * 864e5).toISOString().slice(0, 10);
+  const recent = rows.filter(r => r.d >= from);
+  const sub = `<div class="lg-sub" role="group" aria-label="View">${SUBS.map(([k, t]) => `<button class="chip" data-sub="${k}" aria-pressed="${k === lgSub}">${t}</button>`).join("")}</div>`;
+  const title = SUBS.find(x => x[0] === lgSub)[1];
+  let body = "";
+  if (!rows.length) body = `<p class="lg-empty">No ${TABS[lgTab]} games for our players this season yet.</p>`;
+  else if (lgSub === "daily" || lgSub === "log") {
+    let list = lgSub === "daily" ? recent : rows.filter(r => !lgPlayer || r.slug === lgPlayer);
+    const pick = lgSub === "log" ? `<select id="lgp" aria-label="Player"><option value="">All players</option>${[...new Map(rows.map(r => [r.slug, r.name]))].sort((a, b) => a[1].localeCompare(b[1])).map(([s, n]) => `<option value="${s}"${s === lgPlayer ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>` : "";
+    let day = "", trs = "";
+    list.forEach(r => { if (r.d !== day) { day = r.d; trs += `<tr class="day"><td colspan="${7 + STAT_TH.length}">${dfmtY(r.d)}</td></tr>`; }
+      trs += `<tr><td class="l nm" data-p="${r.slug}">${esc(r.name)}</td><td class="l">${esc(r.team)}</td><td class="l">${r.ha === "@" ? "@ " : ""}${esc(r.opp)}</td><td class="l">${esc(r.comp)}</td><td class="l">${r.wl} ${r.sc}</td>${statCells(r, 0)}</tr>`; });
+    body = `${pick ? `<div class="lg-sub">${pick}</div>` : ""}${list.length ? `<div class="lg-scroll"><table class="lgt"><thead><tr><th class="l">Name</th><th class="l">Team</th><th class="l">Opponent</th><th class="l">League</th><th class="l">Result</th>${STAT_TH.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${trs}</tbody></table></div>`
+      : `<p class="lg-empty">No ${TABS[lgTab]} games in the last 7 days.</p>`}`;
+  } else {
+    const av = averages(lgSub === "avg7" ? recent : rows), k = lgSort.k;
+    av.sort((a, b) => (typeof a[k] === "string" ? a[k].localeCompare(b[k]) : a[k] - b[k]) * lgSort.dir);
+    const th = (h, key, l) => `<th${l ? ' class="l"' : ""} data-k="${key}"${key === k ? ` aria-sort="${lgSort.dir < 0 ? "descending" : "ascending"}"` : ""}>${h}</th>`;
+    body = av.length ? `<div class="lg-scroll"><table class="lgt"><thead><tr>${th("Name", "name", 1)}${th("Team", "team", 1)}${th("League", "comp", 1)}${th("GP", "gp")}${STAT_TH.map((h, i) => th(h, STAT_K[i])).join("")}</tr></thead><tbody>
+      ${av.map(a => `<tr><td class="l nm" data-p="${a.slug}">${esc(a.name)}</td><td class="l">${esc(a.team)}</td><td class="l">${esc(a.comp)}</td><td>${a.gp}</td>${statCells(a, 1)}</tr>`).join("")}</tbody></table></div>`
+      : `<p class="lg-empty">No ${TABS[lgTab]} games in the last 7 days.</p>`;
+  }
+  el.innerHTML = `${sub}<div class="lg-h"><h2>${TABS[lgTab]} · ${title}</h2><p class="note">${lgSub === "avg" || lgSub === "avg7" ? "Click a column to sort. " : ""}Click a name for her full player view.</p></div>${body}`;
+}
+$("#league").addEventListener("click", e => {
+  const b = e.target.closest("[data-sub]"); if (b) { lgSub = b.dataset.sub; return renderLeague(); }
+  const h = e.target.closest("th[data-k]"); if (h) { const k = h.dataset.k; lgSort = { k, dir: lgSort.k === k ? -lgSort.dir : (k === "name" || k === "team" || k === "comp" ? 1 : -1) }; return renderLeague(); }
+  const n = e.target.closest("[data-p]"); if (n) location.hash = "#" + n.dataset.p;
+});
+$("#league").addEventListener("change", e => { if (e.target.id === "lgp") { lgPlayer = e.target.value; renderLeague(); } });
+$("#sitetabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) location.hash = "#" + b.dataset.tab; });
+function showTab(t) {
+  $$("#sitetabs [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  $("#watch").hidden = t !== "watch"; $("#league").hidden = t === "watch";
+  if (t === "watch") render(); else { lgTab = t; renderLeague(); }
+}
+function fromHash() {
+  const h = location.hash.slice(1), p = P.find(x => x.slug === h);
+  if (p) { showTab("watch"); openPlayer(p); return; }
+  closePlayer();
+  showTab(TABS[h] || h === "watch" ? h : "international");
+}
 addEventListener("hashchange", fromHash);
-render();
 fromHash();
 </script>
 </body>

@@ -17,7 +17,8 @@
       "person": 217051,
       "competition": 209090
     },
-    "pos": "G"
+    "pos": "G",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Shaina_Pellington/366290"
   },
   {
     "name": "Sami Hill",
@@ -35,7 +36,8 @@
       "person": 188714,
       "competition": 209090
     },
-    "pos": "G"
+    "pos": "G",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Samantha-Hill/259991"
   },
   {
     "name": "Jasmine Bascoe",
@@ -77,7 +79,8 @@
         "surname": "prosper",
         "team": "zvvz-usk-praha"
       }
-    ]
+    ],
+    "eurobasket_url": "https://basketball.eurobasket.com/player/wd/618607"
   },
   {
     "name": "Merissah Russell",
@@ -97,7 +100,8 @@
       "competition": 208967
     },
     "pos": "G",
-    "jersey": "13"
+    "jersey": "13",
+    "eurobasket_url": "https://www.eurobasket.com/player/Merissah-Russell/441054"
   },
   {
     "name": "Shay Colley",
@@ -118,7 +122,8 @@
       "person": 196900,
       "competition": 208967
     },
-    "pos": "G"
+    "pos": "G",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Shaylisha-Colley/260034"
   },
   {
     "name": "Yvonne Ejim",
@@ -137,7 +142,8 @@
       "person": 172742,
       "competition": 209090
     },
-    "pos": "F"
+    "pos": "F",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Yvonne-Ejim/441053"
   },
   {
     "name": "Kayla Alexander",
@@ -146,7 +152,8 @@
     "fiba_photo": {
       "person": 161433,
       "competition": 208967
-    }
+    },
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Kayla-Alexander/131400"
   },
   {
     "name": "Aaliyah Edwards",
@@ -183,7 +190,8 @@
       "person": 250669,
       "competition": 209090
     },
-    "pos": "C"
+    "pos": "C",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Faith-Dut/477478"
   },
   {
     "name": "Niyah Becker",
@@ -196,7 +204,8 @@
       "person": 217042,
       "competition": 208967
     },
-    "pos": "F"
+    "pos": "F",
+    "eurobasket_url": "https://basketball.eurobasket.com/player/Niyah-Becker/400080"
   },
   {
     "name": "Tara Wallack",
@@ -209,7 +218,8 @@
       "person": 266912,
       "competition": 209090
     },
-    "pos": "F"
+    "pos": "F",
+    "eurobasket_url": "https://www.eurobasket.com/player/Tara-Wallack/520144"
   },
   {
     "name": "Cearah Parchment",

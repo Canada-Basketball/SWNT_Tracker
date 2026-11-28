@@ -15,6 +15,7 @@ import requests
 from PIL import Image
 
 import instat
+import eurobasket
 import overseas
 import scout
 
@@ -325,6 +326,17 @@ def main():
         og[name] = sorted(ig + rest, key=lambda g: g["d"], reverse=True)
         osh[name] = {**osh.get(name, {}), **ish}
         osrc[name] = sorted(set(osrc.get(name, [])) | {"Hudl InStat"}) if rest else ["Hudl InStat"]
+    # Eurobasket (org subscription; eurobasket.py, run daily on the Mac): fills games no other source has,
+    # e.g. the Baltic league. A game already covered on the same date is left alone.
+    edata = eurobasket.load()
+    for p in roster:
+        eg = eurobasket.player(edata, p.get("eurobasket_url"))
+        name = p["name"]
+        have = {g["d"] for g in og.get(name, [])}
+        new = [g for g in eg if g["d"] not in have]
+        if new:
+            og[name] = sorted(og.get(name, []) + new, key=lambda g: g["d"], reverse=True)
+            osrc[name] = sorted(set(osrc.get(name, [])) | {"Eurobasket"})
     for pl in players:
         if og.get(pl["name"]):
             merge_overseas(pl, og[pl["name"]], osh.get(pl["name"], {}), osrc.get(pl["name"], []))
@@ -369,7 +381,7 @@ def main():
     in_season = {lg: bool((data_date - box[box.league == lg].game_date.max()).days <= 7) for lg in ("NCAA", "WNBA")}
     payload = {
         "built": dt.date.today().isoformat(), "data_through": str(data_date),
-        "current": current, "in_season": in_season, "players": players,
+        "current": current, "in_season": in_season, "club_season": overseas.SEASON, "players": players,
     }
     logo_svg = (ROOT / "data" / "brand" / "cb-logo.svg").read_bytes()
     html = (ROOT / "template.html").read_text().replace(
